@@ -1,11 +1,66 @@
 import time
-from .game_state import GameState
-from .ai_move import (
-    get_ai_move_random,
-    get_ai_move_greedy,
-    get_ai_move_advanced,
-    get_ai_move_minimax,
-)
+
+
+class GameState:
+    def __init__(self):
+        self.board = [0] * 27
+        self.lines = generate_all_lines_no_center()
+        self.score_A = 0
+        self.score_B = 0
+        self.move_count = 0
+        self.center_idx = 13
+
+    def is_valid_move(self, idx):
+        """检查落子是否合法"""
+        if idx == self.center_idx:
+            return False
+        if idx < 0 or idx >= 27:
+            return False
+        return self.board[idx] == 0
+
+    def make_move(self, idx, player):
+        """执行落子，返回是否成功"""
+        if not self.is_valid_move(idx):
+            return False
+
+        # 落子
+        self.board[idx] = player
+        self.move_count += 1
+
+        # 检查经过此格的所有线
+        for line in self.lines:
+            if idx not in line:
+                continue
+
+            # 统计这条线的状态
+            player_count = 0
+            opponent_count = 0
+            empty_count = 0
+
+            for pos in line:
+                if self.board[pos] == player:
+                    player_count += 1
+                elif self.board[pos] == -player:
+                    opponent_count += 1
+                else:
+                    empty_count += 1
+
+            # 如果3个都是当前玩家，这条线刚完成
+            if player_count == 3 and opponent_count == 0:
+                if player == 1:
+                    self.score_A += 1
+                else:
+                    self.score_B += 1
+
+        return True
+
+    def get_valid_moves(self):
+        """获取所有合法移动"""
+        moves = []
+        for idx in range(27):
+            if self.is_valid_move(idx):
+                moves.append(idx)
+        return moves
 
 
 def idx_to_xyz(idx):
@@ -114,12 +169,10 @@ def run_multiple_games(num_games=100, ai_func=None, verbose=False, max_moves=26)
         "score_B_list": [],  # 每局B的得分
         "move_counts": [],  # 每局总步数
         "game_times": [],  # 每局耗时（秒）
-        "first_player_win": 0,  # 先手胜
-        "second_player_win": 0,  # 后手胜
     }
     # 如果没有指定AI，使用随机AI
     if ai_func is None:
-        ai_func = get_ai_move_random
+        raise ValueError("ai_func must be provided")
 
     for game_num in range(num_games):
         if verbose:
@@ -172,14 +225,10 @@ def run_multiple_games(num_games=100, ai_func=None, verbose=False, max_moves=26)
         # 胜负判断
         if state.score_A > state.score_B:
             stats["wins_A"] += 1
-            if move_count > 0:  # 先手A获胜
-                stats["first_player_win"] += 1
             if verbose:
                 print(f"🏆 玩家A获胜！ A: {state.score_A}, B: {state.score_B}")
         elif state.score_B > state.score_A:
             stats["wins_B"] += 1
-            if move_count > 0:  # 后手B获胜
-                stats["second_player_win"] += 1
             if verbose:
                 print(f"🏆 玩家B获胜！ A: {state.score_A}, B: {state.score_B}")
         else:
@@ -205,72 +254,36 @@ def run_multiple_games(num_games=100, ai_func=None, verbose=False, max_moves=26)
     stats["win_rate_A"] = stats["wins_A"] / num_games * 100 if num_games > 0 else 0
     stats["win_rate_B"] = stats["wins_B"] / num_games * 100 if num_games > 0 else 0
     stats["draw_rate"] = stats["draws"] / num_games * 100 if num_games > 0 else 0
-    stats["first_win_rate"] = (
-        stats["first_player_win"] / num_games * 100 if num_games > 0 else 0
-    )
 
     return stats
 
 
 def print_stats(stats):
     """打印统计结果"""
-    print("\n" + "=" * 60)
-    print("📊 统计结果")
-    print("=" * 60)
     print(f"总对局数: {stats['total_games']}")
-    print(f"\n🏆 胜负统计:")
+    print()
+    print(f"🏆 胜负统计:")
     print(f"  玩家A胜: {stats['wins_A']} ({stats['win_rate_A']:.1f}%)")
     print(f"  玩家B胜: {stats['wins_B']} ({stats['win_rate_B']:.1f}%)")
     print(f"  平局:    {stats['draws']} ({stats['draw_rate']:.1f}%)")
-    print(f"\n📈 先手/后手统计:")
-    print(f"  先手胜:  {stats['first_player_win']} ({stats['first_win_rate']:.1f}%)")
-    print(
-        f"  后手胜:  {stats['second_player_win']} ({100 - stats['first_win_rate']:.1f}%)"
-    )
-    print(f"\n📊 得分统计:")
+    print()
+    print(f"📈得分统计:")
     print(f"  玩家A平均得分: {stats['avg_score_A']:.2f}")
     print(f"  玩家B平均得分: {stats['avg_score_B']:.2f}")
     print(f"  总得分差:      {stats['avg_score_A'] - stats['avg_score_B']:.2f}")
-    print(f"\n⏱️ 步数/时间:")
+    print()
+    print(f"⏱️ 步数/时间:")
     print(f"  平均步数: {stats['avg_moves']:.1f}")
     print(f"  平均耗时: {stats['avg_time']:.4f}秒")
     print(f"  总耗时:   {sum(stats['game_times']):.2f}秒")
-
-    # 得分分布（如果有数据）
-    if stats["score_A_list"]:
-        print(f"\n📊 得分分布:")
-        print(
-            f"  玩家A - 最高: {max(stats['score_A_list']):.0f}, 最低: {min(stats['score_A_list']):.0f}"
-        )
-        print(
-            f"  玩家B - 最高: {max(stats['score_B_list']):.0f}, 最低: {min(stats['score_B_list']):.0f}"
-        )
-
-    print("=" * 60)
-
-
-def compare_ais(ai1, ai1_name, ai2, ai2_name, num_games=100):
-    """
-    比较两个AI的胜负
-
-    Args:
-        ai1: 第一个AI函数（先手）
-        ai1_name: AI1的名称
-        ai2: 第二个AI函数（后手）
-        ai2_name: AI2的名称
-        num_games: 对局次数
-    """
-    print(f"\n⚔️ AI对战: {ai1_name} vs {ai2_name}")
-    print(f"对局数: {num_games}")
-    print("-" * 40)
-
-    # 运行对局（使用自定义AI）
-    stats = run_multiple_games(num_games, ai_func=None, verbose=False)
-
-    # 但这里需要修改为两个AI交替
-    # 更准确的方式：自定义对战逻辑
-    stats = run_ai_vs_ai(ai1, ai2, num_games)
-    print_stats(stats)
+    print()
+    print(f"📊 得分分布:")
+    print(
+        f"  玩家A - 最高: {max(stats['score_A_list']):.0f}, 最低: {min(stats['score_A_list']):.0f}"
+    )
+    print(
+        f"  玩家B - 最高: {max(stats['score_B_list']):.0f}, 最低: {min(stats['score_B_list']):.0f}"
+    )
 
 
 def run_ai_vs_ai(ai1, ai2, num_games=100):

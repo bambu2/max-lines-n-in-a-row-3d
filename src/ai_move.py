@@ -1,8 +1,7 @@
 import random
 import math
 
-from game_state import GameState
-from utils import idx_to_xyz
+from src.utils import idx_to_xyz, GameState
 
 
 def get_ai_move_random(state, player):
