@@ -1,4 +1,5 @@
 import random
+import math
 
 from game_state import GameState
 from utils import idx_to_xyz
@@ -223,3 +224,168 @@ def evaluate_board(state, player):
     # 中间局面评估
     score_diff = state.score_A - state.score_B
     return score_diff * 10  # 转换回玩家视角
+
+
+class MCTSNode:
+    def __init__(self, state, parent=None, move=None):
+        self.state = state  # GameState 对象
+        self.parent = parent  # 父节点
+        self.move = move  # 走到这个节点的落子位置 (idx)
+        self.children = []  # 子节点列表
+        self.wins = 0  # 胜利次数（从当前玩家视角）
+        self.visits = 0  # 访问次数
+        self.untried_moves = state.get_valid_moves()  # 还没试过的走法
+
+    def is_fully_expanded(self):
+        """检查是否所有可能的走法都已尝试过"""
+        return len(self.untried_moves) == 0
+
+    def is_terminal(self):
+        """检查游戏是否结束（所有格子下满）"""
+        return self.state.move_count >= 26
+
+    def best_child(self, exploration_constant=1.41):
+        """
+        使用 UCT 公式选择最佳子节点
+        UCT = 胜率 + C * sqrt(ln(父访问次数) / 子访问次数)
+        """
+        best_score = -float("inf")
+        best_child = None
+
+        for child in self.children:
+            # 胜率
+            win_rate = child.wins / child.visits if child.visits > 0 else 0
+            # 探索奖励
+            exploration = exploration_constant * math.sqrt(
+                math.log(self.visits) / child.visits
+            )
+            score = win_rate + exploration
+
+            if score > best_score:
+                best_score = score
+                best_child = child
+
+
+class MCTS:
+    def __init__(self, state, iterations=1000):
+        self.root = MCTSNode(state)
+        self.iterations = iterations
+        self.current_player = 1  # 假设 MCTS 总是为当前玩家服务
+
+    def search(self):
+        """执行 MCTS 搜索"""
+        # 如果根节点已经是终局，直接返回
+        if self.root.is_terminal():
+            return None
+
+        for _ in range(self.iterations):
+            # 1. 选择
+            node = self.select(self.root)
+
+            # 如果 node 是 None，跳过这轮
+            if node is None:
+                continue
+
+            # 2. 扩展
+            if not node.is_terminal():
+                node = self.expand(node)
+
+            # 3. 模拟
+            winner = self.simulate(node.state)
+
+            # 4. 回传
+            self.backpropagate(node, winner)
+
+        # 返回访问次数最多的子节点
+        if not self.root.children:
+            return None
+
+        best_move_node = max(self.root.children, key=lambda c: c.visits)
+        return best_move_node.move
+
+    def select(self, node):
+        """
+        选择：从根节点开始，一直选 UCT 最高的子节点
+        """
+        while not node.is_terminal() and node.is_fully_expanded():
+            child = node.best_child()
+            if child is None:  # 如果没有子节点，跳出循环
+                break
+            node = child
+        return node
+
+    def expand(self, node):
+        """扩展：从未尝试的走法中随机选一个，创建子节点"""
+        # 随机选一个未尝试的走法
+        move = random.choice(node.untried_moves)
+        node.untried_moves.remove(move)
+
+        # 创建新状态
+        new_state = copy_state(node.state)  # 需要深拷贝
+        new_state.make_move(move, self.current_player)
+
+        # 创建子节点
+        child_node = MCTSNode(new_state, parent=node, move=move)
+        node.children.append(child_node)
+
+        return child_node
+
+    def simulate(self, state):
+        """
+        模拟：从当前状态开始，双方随机走棋直到终局
+        返回胜利玩家 (1 或 -1)
+        """
+        sim_state = copy_state(state)
+        player = self.current_player
+
+        # 随机下到终局
+        while sim_state.move_count < 26:
+            valid_moves = sim_state.get_valid_moves()
+            if not valid_moves:
+                break
+
+            # 随机走一步
+            move = random.choice(valid_moves)
+            sim_state.make_move(move, player)
+            player = -player  # 切换玩家
+
+        # 判断胜负（从当前玩家视角）
+        if sim_state.score_A > sim_state.score_B:
+            return 1  # 玩家A赢
+        elif sim_state.score_B > sim_state.score_A:
+            return -1  # 玩家B赢
+        else:
+            return 0  # 平局（极少发生）
+
+    def backpropagate(self, node, winner):
+        """回传：从节点一直更新到根节点"""
+        while node is not None:
+            node.visits += 1
+            # 只有当前玩家赢了才加分
+            if winner == self.current_player:
+                node.wins += 1
+            node = node.parent
+
+
+def copy_state(state):
+    """快速拷贝 GameState（只拷贝必要数据）"""
+    new_state = GameState()
+    new_state.board = state.board.copy()  # 列表拷贝
+    new_state.score_A = state.score_A
+    new_state.score_B = state.score_B
+    new_state.move_count = state.move_count
+    # lines 和 center_idx 是只读的，可以共享
+    return new_state
+
+
+def get_ai_move_mcts(state, player, iterations=500):
+    """
+    MCTS AI 主函数
+    iterations: 模拟次数，越大棋力越强（推荐 500-2000）
+    """
+    # MCTS 内部用 player 作为当前玩家
+    mcts = MCTS(state, iterations=iterations)
+    mcts.current_player = player
+
+    best_move = mcts.search()
+    return best_move
