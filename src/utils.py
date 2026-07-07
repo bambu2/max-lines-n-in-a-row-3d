@@ -196,6 +196,59 @@ class GameState:
         return "\n".join(result)
 
 
+class Stats:
+    """统计信息类"""
+
+    def __init__(self):
+        self.total_games = 0
+        self.wins_A = 0
+        self.wins_B = 0
+        self.draws = 0
+        self.score_A_list = []
+        self.score_B_list = []
+        self.avg_score_A = 0.0
+        self.avg_score_B = 0.0
+        self.avg_moves = 0.0
+        self.avg_time = 0.0
+        self.win_rate_A = 0.0
+        self.win_rate_B = 0.0
+        self.draw_rate = 0.0
+        self.move_counts = []
+        self.game_times = []
+
+    def update(self, state, game_time):
+        """更新统计信息"""
+        self.total_games += 1
+        self.score_A_list.append(state.score_A)
+        self.score_B_list.append(state.score_B)
+        self.move_counts.append(state.move_count)
+        self.game_times.append(game_time)
+
+        if state.score_A > state.score_B:
+            self.wins_A += 1
+        elif state.score_B > state.score_A:
+            self.wins_B += 1
+        else:
+            self.draws += 1
+
+    def get_stats(self):
+        """计算并返回统计结果"""
+        num_games = self.total_games
+        return {
+            "total_games": num_games,
+            "wins_A": self.wins_A,
+            "wins_B": self.wins_B,
+            "draws": self.draws,
+            "avg_score_A": sum(self.score_A_list) / num_games if num_games > 0 else 0.0,
+            "avg_score_B": sum(self.score_B_list) / num_games if num_games > 0 else 0.0,
+            "avg_moves": sum(self.move_counts) / num_games if num_games > 0 else 0.0,
+            "avg_time": sum(self.game_times) / num_games if num_games > 0 else 0.0,
+            "win_rate_A": self.wins_A / num_games if num_games > 0 else 0.0,
+            "win_rate_B": self.wins_B / num_games if num_games > 0 else 0.0,
+            "draw_rate": self.draws / num_games if num_games > 0 else 0.0,
+        }
+
+
 def print_board(board):
     """打印3x3x3棋盘的当前状态"""
     symbols = {0: "·", 1: "X", -1: "O"}
@@ -214,7 +267,9 @@ def print_board(board):
         print("   " + "-" * 11)
 
 
-def run_multiple_games(num_games=100, ai_func=None, verbose=False, max_moves=26):
+def run_multiple_games(
+    num_games=100, ai_func=None, verbose=False, max_moves=26
+) -> Stats:
     """
     运行多次对局并统计结果
 
@@ -225,18 +280,12 @@ def run_multiple_games(num_games=100, ai_func=None, verbose=False, max_moves=26)
         max_moves: 最大步数（26步，因为中心不可用）
 
     Returns:
-        dict: 统计结果
+        Stats: 统计结果
     """
-    stats = {
-        "total_games": num_games,
-        "wins_A": 0,  # 玩家A胜
-        "wins_B": 0,  # 玩家B胜
-        "draws": 0,  # 平局
-        "score_A_list": [],  # 每局A的得分
-        "score_B_list": [],  # 每局B的得分
-        "move_counts": [],  # 每局总步数
-        "game_times": [],  # 每局耗时（秒）
-    }
+
+    stats = Stats()
+    stats.total_games = num_games
+
     # 如果没有指定AI，使用随机AI
     if ai_func is None:
         raise ValueError("ai_func must be provided")
@@ -284,43 +333,36 @@ def run_multiple_games(num_games=100, ai_func=None, verbose=False, max_moves=26)
         game_time = end_time - start_time
 
         # 记录数据
-        stats["score_A_list"].append(state.score_A)
-        stats["score_B_list"].append(state.score_B)
-        stats["move_counts"].append(move_count)
-        stats["game_times"].append(game_time)
+        stats.update(state, game_time)
 
         # 胜负判断
         if state.score_A > state.score_B:
-            stats["wins_A"] += 1
+            stats.wins_A += 1
             if verbose:
                 print(f"🏆 玩家A获胜！ A: {state.score_A}, B: {state.score_B}")
         elif state.score_B > state.score_A:
-            stats["wins_B"] += 1
+            stats.wins_B += 1
             if verbose:
                 print(f"🏆 玩家B获胜！ A: {state.score_A}, B: {state.score_B}")
         else:
-            stats["draws"] += 1
+            stats.draws += 1
             if verbose:
                 print(f"🤝 平局！ A: {state.score_A}, B: {state.score_B}")
 
         if verbose:
             print(f"⏱️ 耗时: {game_time:.4f}秒")
             print(
-                f"📊 当前统计: A胜{stats['wins_A']}, B胜{stats['wins_B']}, 平局{stats['draws']}"
+                f"📊 当前统计: A胜{stats.wins_A}, B胜{stats.wins_B}, 平局{stats.draws}"
             )
 
     # 计算平均值和统计信息
-    stats["avg_score_A"] = (
-        sum(stats["score_A_list"]) / num_games if num_games > 0 else 0
-    )
-    stats["avg_score_B"] = (
-        sum(stats["score_B_list"]) / num_games if num_games > 0 else 0
-    )
-    stats["avg_moves"] = sum(stats["move_counts"]) / num_games if num_games > 0 else 0
-    stats["avg_time"] = sum(stats["game_times"]) / num_games if num_games > 0 else 0
-    stats["win_rate_A"] = stats["wins_A"] / num_games * 100 if num_games > 0 else 0
-    stats["win_rate_B"] = stats["wins_B"] / num_games * 100 if num_games > 0 else 0
-    stats["draw_rate"] = stats["draws"] / num_games * 100 if num_games > 0 else 0
+    stats.avg_score_A = sum(stats.score_A_list) / num_games if num_games > 0 else 0.0
+    stats.avg_score_B = sum(stats.score_B_list) / num_games if num_games > 0 else 0.0
+    stats.avg_moves = sum(stats.move_counts) / num_games if num_games > 0 else 0.0
+    stats.avg_time = sum(stats.game_times) / num_games if num_games > 0 else 0.0
+    stats.win_rate_A = stats.wins_A / num_games if num_games > 0 else 0.0
+    stats.win_rate_B = stats.wins_B / num_games if num_games > 0 else 0.0
+    stats.draw_rate = stats.draws / num_games if num_games > 0 else 0.0
 
     return stats
 
@@ -340,46 +382,37 @@ def idx_to_xyz(idx):
 
 def print_stats(stats):
     """打印统计结果"""
-    print(f"总对局数: {stats['total_games']}")
+    print(f"总对局数: {stats.total_games}")
     print()
     print(f"🏆 胜负统计:")
-    print(f"  玩家A胜: {stats['wins_A']} ({stats['win_rate_A']:.1f}%)")
-    print(f"  玩家B胜: {stats['wins_B']} ({stats['win_rate_B']:.1f}%)")
-    print(f"  平局:    {stats['draws']} ({stats['draw_rate']:.1f}%)")
+    print(f"  玩家A胜: {stats.wins_A} ({rate_to_percentage(stats.win_rate_A)})")
+    print(f"  玩家B胜: {stats.wins_B} ({rate_to_percentage(stats.win_rate_B)})")
+    print(f"  平局:    {stats.draws} ({rate_to_percentage(stats.draw_rate)})")
     print()
-    print(f"📈得分统计:")
-    print(f"  玩家A平均得分: {stats['avg_score_A']:.2f}")
-    print(f"  玩家B平均得分: {stats['avg_score_B']:.2f}")
-    print(f"  总得分差:      {stats['avg_score_A'] - stats['avg_score_B']:.2f}")
+    print(f"📈连线数统计:")
+    print(f"  玩家 A 连线数")
+    print(
+        f"    最高: {max(stats.score_A_list)}, 最低: {min(stats.score_A_list)}, 平均: {stats.avg_score_A:.2f}"
+    )
+    print(f"  玩家 B 连线数")
+    print(
+        f"    最高: {max(stats.score_B_list)}, 最低: {min(stats.score_B_list)}, 平均: {stats.avg_score_B:.2f}"
+    )
+    print(f"  平均连线数差: {stats.avg_score_A - stats.avg_score_B:.2f}")
     print()
     print(f"⏱️ 步数/时间:")
-    print(f"  平均步数: {stats['avg_moves']:.1f}")
-    print(f"  平均耗时: {stats['avg_time']:.4f}秒")
-    print(f"  总耗时:   {sum(stats['game_times']):.2f}秒")
-    print()
-    print(f"📊 得分分布:")
-    print(
-        f"  玩家A - 最高: {max(stats['score_A_list']):.0f}, 最低: {min(stats['score_A_list']):.0f}"
-    )
-    print(
-        f"  玩家B - 最高: {max(stats['score_B_list']):.0f}, 最低: {min(stats['score_B_list']):.0f}"
-    )
+    print(f"  平均步数: {stats.avg_moves:.1f}")
+    print(f"  平均耗时: {stats.avg_time:.4f}秒")
+    print(f"  总耗时:   {sum(stats.game_times):.2f}秒")
 
 
-def run_ai_vs_ai(ai1, ai2, num_games=100):
+def run_ai_vs_ai(ai1, ai2, num_games=100) -> Stats:
     """
     运行两个AI对战（AI1先手，AI2后手）
     """
-    stats = {
-        "total_games": num_games,
-        "wins_ai1": 0,
-        "wins_ai2": 0,
-        "draws": 0,
-        "score_ai1_list": [],
-        "score_ai2_list": [],
-        "move_counts": [],
-        "game_times": [],
-    }
+
+    stats = Stats()
+    total_games = num_games
 
     for game_num in range(num_games):
         state = GameState()
@@ -404,24 +437,29 @@ def run_ai_vs_ai(ai1, ai2, num_games=100):
 
         end_time = time.time()
 
-        stats["score_ai1_list"].append(state.score_A)
-        stats["score_ai2_list"].append(state.score_B)
-        stats["move_counts"].append(move_count)
-        stats["game_times"].append(end_time - start_time)
+        stats.score_A_list.append(state.score_A)
+        stats.score_B_list.append(state.score_B)
+        stats.move_counts.append(move_count)
+        stats.game_times.append(end_time - start_time)
 
         if state.score_A > state.score_B:
-            stats["wins_ai1"] += 1
+            stats.wins_A += 1
         elif state.score_B > state.score_A:
-            stats["wins_ai2"] += 1
+            stats.wins_B += 1
         else:
-            stats["draws"] += 1
+            stats.draws += 1
 
     # 计算统计信息
-    stats["avg_score_ai1"] = sum(stats["score_ai1_list"]) / num_games
-    stats["avg_score_ai2"] = sum(stats["score_ai2_list"]) / num_games
-    stats["avg_moves"] = sum(stats["move_counts"]) / num_games
-    stats["win_rate_ai1"] = stats["wins_ai1"] / num_games * 100
-    stats["win_rate_ai2"] = stats["wins_ai2"] / num_games * 100
-    stats["draw_rate"] = stats["draws"] / num_games * 100
+    stats.avg_score_A = sum(stats.score_A_list) / num_games
+    stats.avg_score_B = sum(stats.score_B_list) / num_games
+    stats.avg_moves = sum(stats.move_counts) / num_games
+    stats.win_rate_A = stats.wins_A / num_games
+    stats.win_rate_B = stats.wins_B / num_games
+    stats.draw_rate = stats.draws / num_games
 
     return stats
+
+
+def rate_to_percentage(rate):
+    """将胜率转换为百分比字符串"""
+    return f"{rate * 100:.1f}%"
