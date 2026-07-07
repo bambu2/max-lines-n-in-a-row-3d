@@ -29,9 +29,9 @@ def single_ai_test():
     )
     print_stats(stats_minimax)
 
-    # stats_mcts = run_multiple_games(
-    #     num_games=100,
-    #     ai_func=lambda s, p: get_ai_move_mcts(s, p, iterations=500),
-    #     verbose=False,
-    # )
-    # print_stats(stats_mcts)
+    stats_mcts = run_multiple_games(
+        num_games=100,
+        ai_func=get_ai_move_mcts,
+        verbose=False,
+    )
+    print_stats(stats_mcts)

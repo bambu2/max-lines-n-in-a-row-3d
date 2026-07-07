@@ -2,131 +2,198 @@ import time
 
 
 class GameState:
+    """3x3x3 无中心块井字棋游戏状态"""
+
     def __init__(self):
-        self.board = [0] * 27
-        self.lines = generate_all_lines_no_center()
-        self.score_A = 0
-        self.score_B = 0
-        self.move_count = 0
-        self.center_idx = 13
+        """初始化游戏状态"""
+        self.board = [0] * 27  # 0=空, 1=玩家A, -1=玩家B
+        self.lines = self._generate_all_lines_no_center()  # 所有有效线（索引列表）
+        self.score_A = 0  # 玩家A完成的线数
+        self.score_B = 0  # 玩家B完成的线数
+        self.move_count = 0  # 已下步数
+        self.center_idx = 13  # 中心格索引 (1,1,1)
+        self.current_player = 1  # 当前玩家 (1=A, -1=B)
+
+    def _generate_all_lines_no_center(self):
+        """生成所有不经过中心的线（返回索引列表）"""
+        # 先生成所有坐标线
+        coord_lines = self._generate_coord_lines()
+        idx_lines = []
+
+        for line in coord_lines:
+            if (1, 1, 1) not in line:  # 排除经过中心的线
+                idx_line = [xyz_to_idx(*coord) for coord in line]
+                idx_lines.append(idx_line)
+
+        return idx_lines
+
+    def _generate_coord_lines(self):
+        """生成所有49条线的坐标表示"""
+        lines = []
+
+        # 1. X轴方向 (每层每行)
+        for l in range(3):
+            for r in range(3):
+                lines.append([(l, r, 0), (l, r, 1), (l, r, 2)])
+
+        # 2. Y轴方向 (每层每列)
+        for l in range(3):
+            for c in range(3):
+                lines.append([(l, 0, c), (l, 1, c), (l, 2, c)])
+
+        # 3. Z轴方向 (跨层)
+        for r in range(3):
+            for c in range(3):
+                lines.append([(0, r, c), (1, r, c), (2, r, c)])
+
+        # 4. 每层对角线 (3层 × 2条)
+        for l in range(3):
+            lines.append([(l, 0, 0), (l, 1, 1), (l, 2, 2)])
+            lines.append([(l, 0, 2), (l, 1, 1), (l, 2, 0)])
+
+        # 5. 跨层对角线
+        for r in range(3):
+            lines.append([(0, r, 0), (1, r, 1), (2, r, 2)])
+            lines.append([(0, r, 2), (1, r, 1), (2, r, 0)])
+
+        for c in range(3):
+            lines.append([(0, 0, c), (1, 1, c), (2, 2, c)])
+            lines.append([(0, 2, c), (1, 1, c), (2, 0, c)])
+
+        # 6. 体对角线 (4条)
+        lines.append([(0, 0, 0), (1, 1, 1), (2, 2, 2)])
+        lines.append([(0, 0, 2), (1, 1, 1), (2, 2, 0)])
+        lines.append([(0, 2, 0), (1, 1, 1), (2, 0, 2)])
+        lines.append([(0, 2, 2), (1, 1, 1), (2, 0, 0)])
+
+        return lines
 
     def is_valid_move(self, idx):
-        """检查落子是否合法"""
-        if idx == self.center_idx:
+        """检查走法是否合法"""
+        if idx == self.center_idx:  # 中心不可用
             return False
-        if idx < 0 or idx >= 27:
+        if idx < 0 or idx >= 27:  # 索引范围
             return False
-        return self.board[idx] == 0
-
-    def make_move(self, idx, player):
-        """执行落子，返回是否成功"""
-        if not self.is_valid_move(idx):
-            return False
-
-        # 落子
-        self.board[idx] = player
-        self.move_count += 1
-
-        # 检查经过此格的所有线
-        for line in self.lines:
-            if idx not in line:
-                continue
-
-            # 统计这条线的状态
-            player_count = 0
-            opponent_count = 0
-            empty_count = 0
-
-            for pos in line:
-                if self.board[pos] == player:
-                    player_count += 1
-                elif self.board[pos] == -player:
-                    opponent_count += 1
-                else:
-                    empty_count += 1
-
-            # 如果3个都是当前玩家，这条线刚完成
-            if player_count == 3 and opponent_count == 0:
-                if player == 1:
-                    self.score_A += 1
-                else:
-                    self.score_B += 1
-
-        return True
+        return self.board[idx] == 0  # 空位
 
     def get_valid_moves(self):
-        """获取所有合法移动"""
+        """获取所有合法走法"""
         moves = []
         for idx in range(27):
             if self.is_valid_move(idx):
                 moves.append(idx)
         return moves
 
+    def make_move(self, idx, player):
+        """
+        执行走法
 
-def idx_to_xyz(idx):
-    return idx // 9, (idx // 3) % 3, idx % 3
+        Args:
+            idx: 落子位置 (0-26)
+            player: 当前玩家 (1 或 -1)
 
+        Returns:
+            bool: 是否成功
+        """
+        # ========== 防御检查 ==========
+        if not self.is_valid_move(idx):
+            print(f"❌ 非法走法: 位置 {idx} 不可用")
+            return False
 
-def xyz_to_idx(l, r, c):
-    return l * 9 + r * 3 + c
+        if player not in (1, -1):
+            print(f"❌ 非法玩家: {player}")
+            return False
 
+        # ========== 执行落子 ==========
+        self.board[idx] = player
+        self.move_count += 1
 
-def generate_all_lines_no_center():
-    """生成所有不经过中心的线，返回索引列表"""
-    all_lines = []
+        # ========== 检查新完成的线 ==========
+        lines_completed = 0
+        for line in self.lines:
+            if idx not in line:
+                continue
 
-    # 使用坐标生成所有线
-    coord_lines = generate_coord_lines()  # 返回坐标元组列表
+            # 检查这条线是否全部是当前玩家
+            is_complete = True
+            for pos in line:
+                if self.board[pos] != player:
+                    is_complete = False
+                    break
 
-    for line in coord_lines:
-        if (1, 1, 1) not in line:  # 排除经过中心的线
-            # 将坐标转换为索引
-            idx_line = [xyz_to_idx(*coord) for coord in line]
-            all_lines.append(idx_line)
+            if is_complete:
+                # 计数
+                if player == 1:
+                    self.score_A += 1
+                else:
+                    self.score_B += 1
+                lines_completed += 1
 
-    return all_lines
+        # ========== 更新当前玩家 ==========
+        self.current_player = -player
 
+        return True
 
-def generate_coord_lines():
-    """生成所有49条线的坐标表示"""
-    lines = []
+    def is_terminal(self):
+        """检查游戏是否结束（所有格子下满）"""
+        return self.move_count >= 26
 
-    # 1. X轴方向 (每层每行)
-    for l in range(3):
-        for r in range(3):
-            lines.append([(l, r, 0), (l, r, 1), (l, r, 2)])
+    def get_winner(self):
+        """
+        获取获胜者
 
-    # 2. Y轴方向 (每层每列)
-    for l in range(3):
-        for c in range(3):
-            lines.append([(l, 0, c), (l, 1, c), (l, 2, c)])
+        Returns:
+            int: 1 (A赢), -1 (B赢), 0 (平局)
+        """
+        if not self.is_terminal():
+            return None
 
-    # 3. Z轴方向 (跨层)
-    for r in range(3):
-        for c in range(3):
-            lines.append([(0, r, c), (1, r, c), (2, r, c)])
+        if self.score_A > self.score_B:
+            return 1
+        elif self.score_B > self.score_A:
+            return -1
+        else:
+            return 0
 
-    # 4. 每层对角线 (3层 × 2条)
-    for l in range(3):
-        lines.append([(l, 0, 0), (l, 1, 1), (l, 2, 2)])
-        lines.append([(l, 0, 2), (l, 1, 1), (l, 2, 0)])
+    def get_score(self, player):
+        """获取指定玩家的得分"""
+        if player == 1:
+            return self.score_A
+        elif player == -1:
+            return self.score_B
+        else:
+            return 0
 
-    # 5. 跨层对角线
-    for r in range(3):
-        lines.append([(0, r, 0), (1, r, 1), (2, r, 2)])
-        lines.append([(0, r, 2), (1, r, 1), (2, r, 0)])
+    def copy(self):
+        """深拷贝游戏状态"""
+        new_state = GameState()
+        new_state.board = self.board.copy()
+        new_state.score_A = self.score_A
+        new_state.score_B = self.score_B
+        new_state.move_count = self.move_count
+        new_state.current_player = self.current_player
+        # lines 和 center_idx 是只读的，可以共享
+        return new_state
 
-    for c in range(3):
-        lines.append([(0, 0, c), (1, 1, c), (2, 2, c)])
-        lines.append([(0, 2, c), (1, 1, c), (2, 0, c)])
+    def __str__(self):
+        """打印棋盘（人类可读）"""
+        symbols = {0: "·", 1: "X", -1: "O"}
+        result = []
 
-    # 6. 体对角线 (4条)
-    lines.append([(0, 0, 0), (1, 1, 1), (2, 2, 2)])
-    lines.append([(0, 0, 2), (1, 1, 1), (2, 2, 0)])
-    lines.append([(0, 2, 0), (1, 1, 1), (2, 0, 2)])
-    lines.append([(0, 2, 2), (1, 1, 1), (2, 0, 0)])
+        for layer in range(3):
+            result.append(f"\n=== 第 {layer + 1} 层 ===")
+            for row in range(3):
+                line = []
+                for col in range(3):
+                    idx = xyz_to_idx(layer, row, col)
+                    if idx == self.center_idx:
+                        line.append("✦")
+                    else:
+                        line.append(symbols[self.board[idx]])
+                result.append("  ".join(line))
+            result.append("   " + "-" * 11)
 
-    return lines
+        return "\n".join(result)
 
 
 def print_board(board):
@@ -256,6 +323,19 @@ def run_multiple_games(num_games=100, ai_func=None, verbose=False, max_moves=26)
     stats["draw_rate"] = stats["draws"] / num_games * 100 if num_games > 0 else 0
 
     return stats
+
+
+def xyz_to_idx(layer, row, col):
+    """三维坐标 → 一维索引"""
+    return layer * 9 + row * 3 + col
+
+
+def idx_to_xyz(idx):
+    """一维索引 → 三维坐标"""
+    layer = idx // 9
+    row = (idx % 9) // 3
+    col = idx % 3
+    return layer, row, col
 
 
 def print_stats(stats):

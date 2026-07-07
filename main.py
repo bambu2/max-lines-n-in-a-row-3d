@@ -7,7 +7,7 @@ def main():
 
     single_ai_test()
 
-    multiple_ai_test()
+    # multiple_ai_test()
 
 
 if __name__ == "__main__":
