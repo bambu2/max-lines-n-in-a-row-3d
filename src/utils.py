@@ -200,7 +200,6 @@ class Stats:
     """统计信息类"""
 
     def __init__(self):
-        self.total_games = 0
         self.wins_A = 0
         self.wins_B = 0
         self.draws = 0
@@ -284,11 +283,12 @@ def run_multiple_games(
     """
 
     stats = Stats()
-    stats.total_games = num_games
 
     # 如果没有指定AI，使用随机AI
     if ai_func is None:
         raise ValueError("ai_func must be provided")
+
+    print(f"开始运行 {num_games} 局对局，AI: {ai_func.__name__}")
 
     for game_num in range(num_games):
         if verbose:
@@ -412,9 +412,8 @@ def run_ai_vs_ai(ai1, ai2, num_games=100) -> Stats:
     """
 
     stats = Stats()
-    total_games = num_games
 
-    for game_num in range(num_games):
+    for _ in range(num_games):
         state = GameState()
         current_player = 1
         move_count = 0
