@@ -208,7 +208,6 @@ class Stats:
         self.score_B_list = []
         self.avg_score_A = 0.0
         self.avg_score_B = 0.0
-        self.avg_moves = 0.0
         self.avg_time = 0.0
         self.win_rate_A = 0.0
         self.win_rate_B = 0.0
@@ -241,7 +240,6 @@ class Stats:
             "draws": self.draws,
             "avg_score_A": sum(self.score_A_list) / num_games if num_games > 0 else 0.0,
             "avg_score_B": sum(self.score_B_list) / num_games if num_games > 0 else 0.0,
-            "avg_moves": sum(self.move_counts) / num_games if num_games > 0 else 0.0,
             "avg_time": sum(self.game_times) / num_games if num_games > 0 else 0.0,
             "win_rate_A": self.wins_A / num_games if num_games > 0 else 0.0,
             "win_rate_B": self.wins_B / num_games if num_games > 0 else 0.0,
@@ -258,13 +256,12 @@ def print_board(board):
         for row in range(3):
             line = ""
             for col in range(3):
-                idx = layer * 9 + row * 3 + col
+                idx = xyz_to_idx(layer, row, col)
                 if idx == 13:  # 中心格 (1,1,1)
                     line += " ✦ "  # 用特殊符号标记不可用中心
                 else:
                     line += f" {symbols[board[idx]]} "
             print(line)
-        print("   " + "-" * 11)
 
 
 def run_multiple_games(
@@ -289,8 +286,6 @@ def run_multiple_games(
     if ai_func is None:
         raise ValueError("ai_func must be provided")
 
-    print(f"开始运行 {num_games} 局对局，AI: {ai_func.__name__}")
-
     for game_num in range(num_games):
         if verbose:
             print(f"第 {game_num + 1}/{num_games} 局")
@@ -314,13 +309,13 @@ def run_multiple_games(
             state.make_move(move, current_player)
             move_count += 1
 
-            if verbose:
-                print(
-                    f"Step {move_count}: Player {'A' if current_player == 1 else 'B'} -> 位置 {move} ({idx_to_xyz(move)})"
-                )
-
             # 切换玩家
             current_player = -current_player
+
+            if verbose:
+                print(
+                    f"第 {move_count} 步: 玩家 {'A' if current_player == -1 else 'B'} 落子: {idx_to_xyz(move)}"
+                )
 
         end_time = time.time()
         game_time = end_time - start_time
@@ -329,15 +324,11 @@ def run_multiple_games(
         stats.update(state, game_time)
 
         if verbose:
-            print(f"⏱️ 耗时: {game_time:.4f}秒")
-            print(
-                f"📊 当前统计: A胜{stats.wins_A}, B胜{stats.wins_B}, 平局{stats.draws}"
-            )
+            print_board(state.board)
 
     # 计算平均值和统计信息
     stats.avg_score_A = sum(stats.score_A_list) / num_games if num_games > 0 else 0.0
     stats.avg_score_B = sum(stats.score_B_list) / num_games if num_games > 0 else 0.0
-    stats.avg_moves = sum(stats.move_counts) / num_games if num_games > 0 else 0.0
     stats.avg_time = sum(stats.game_times) / num_games if num_games > 0 else 0.0
     stats.win_rate_A = stats.wins_A / num_games if num_games > 0 else 0.0
     stats.win_rate_B = stats.wins_B / num_games if num_games > 0 else 0.0
@@ -359,7 +350,7 @@ def idx_to_xyz(idx):
     return layer, row, col
 
 
-def print_stats(stats):
+def print_stats(stats, verbose=False) -> None:
     """打印统计结果"""
     print(f"🏆 胜负统计:")
     print(f"  玩家A胜: {stats.wins_A} ({rate_to_percentage(stats.win_rate_A)})")
@@ -377,10 +368,11 @@ def print_stats(stats):
     )
     print(f"  平均连线数差: {stats.avg_score_A - stats.avg_score_B:.2f}")
     print()
-    print(f"⏱️ 步数/时间:")
-    print(f"  平均步数: {stats.avg_moves:.1f}")
-    print(f"  平均耗时: {stats.avg_time:.4f}秒")
-    print(f"  总耗时:   {sum(stats.game_times):.2f}秒")
+    if verbose:
+        print(f"⏱️ 步数/时间:")
+        print(f"  平均每局耗时: {stats.avg_time:.4f}秒")
+        print(f"  总耗时:   {sum(stats.game_times):.2f}秒")
+        print()
 
 
 def run_ai_vs_ai(ai1, ai2, num_games=100) -> Stats:
@@ -428,7 +420,7 @@ def run_ai_vs_ai(ai1, ai2, num_games=100) -> Stats:
     # 计算统计信息
     stats.avg_score_A = sum(stats.score_A_list) / num_games
     stats.avg_score_B = sum(stats.score_B_list) / num_games
-    stats.avg_moves = sum(stats.move_counts) / num_games
+    stats.avg_time = sum(stats.game_times) / num_games if num_games > 0 else 0.0
     stats.win_rate_A = stats.wins_A / num_games
     stats.win_rate_B = stats.wins_B / num_games
     stats.draw_rate = stats.draws / num_games

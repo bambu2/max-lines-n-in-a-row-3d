@@ -17,6 +17,7 @@ def multiple_ai_test():
         get_ai_move_minimax,
         get_ai_move_mcts,
     ]
+    num_games = 100  # 每对AI之间的对局数
     try:
         for i in range(len(ai_func_list)):
             for j in range(i + 1, len(ai_func_list)):
@@ -25,8 +26,11 @@ def multiple_ai_test():
                 stats = run_ai_vs_ai(
                     ai1,  # AI1（先手）
                     ai2,  # AI2（后手）
-                    num_games=100,
+                    num_games=num_games,
                 )
-                print_stats(stats)
+                print(
+                    f"AI1: {ai1.__name__} vs AI2: {ai2.__name__}, 对局数: {num_games}"
+                )
+                print_stats(stats, verbose=False)
     except Exception as e:
         print(f"An error occurred: {e}")
