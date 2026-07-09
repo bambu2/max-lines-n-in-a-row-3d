@@ -200,6 +200,7 @@ class Stats:
     """统计信息类"""
 
     def __init__(self):
+        self.total_games = 0
         self.wins_A = 0
         self.wins_B = 0
         self.draws = 0
@@ -292,9 +293,7 @@ def run_multiple_games(
 
     for game_num in range(num_games):
         if verbose:
-            print(f"\n{'='*50}")
             print(f"第 {game_num + 1}/{num_games} 局")
-            print("=" * 50)
 
         start_time = time.time()
 
@@ -302,9 +301,6 @@ def run_multiple_games(
         state = GameState()
         current_player = 1  # A先手
         move_count = 0
-
-        # 记录第一步
-        first_move = None
 
         while move_count < max_moves:
             # AI走棋
@@ -314,9 +310,6 @@ def run_multiple_games(
                 if verbose:
                     print(f"⚠️ 没有合法移动，游戏提前结束")
                 break
-
-            if move_count == 0:
-                first_move = move
 
             state.make_move(move, current_player)
             move_count += 1
@@ -334,20 +327,6 @@ def run_multiple_games(
 
         # 记录数据
         stats.update(state, game_time)
-
-        # 胜负判断
-        if state.score_A > state.score_B:
-            stats.wins_A += 1
-            if verbose:
-                print(f"🏆 玩家A获胜！ A: {state.score_A}, B: {state.score_B}")
-        elif state.score_B > state.score_A:
-            stats.wins_B += 1
-            if verbose:
-                print(f"🏆 玩家B获胜！ A: {state.score_A}, B: {state.score_B}")
-        else:
-            stats.draws += 1
-            if verbose:
-                print(f"🤝 平局！ A: {state.score_A}, B: {state.score_B}")
 
         if verbose:
             print(f"⏱️ 耗时: {game_time:.4f}秒")
@@ -382,8 +361,6 @@ def idx_to_xyz(idx):
 
 def print_stats(stats):
     """打印统计结果"""
-    print(f"总对局数: {stats.total_games}")
-    print()
     print(f"🏆 胜负统计:")
     print(f"  玩家A胜: {stats.wins_A} ({rate_to_percentage(stats.win_rate_A)})")
     print(f"  玩家B胜: {stats.wins_B} ({rate_to_percentage(stats.win_rate_B)})")

@@ -20,8 +20,6 @@ def single_ai_test():
         for ai_func in ai_func_list:
             if ai_func == get_ai_move_random:
                 num_games = 10000
-            elif ai_func == get_ai_move_minimax:
-                num_games = 10
             else:
                 num_games = 100
 
