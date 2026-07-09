@@ -21,7 +21,7 @@ def single_ai_test(verbose=False):
             if ai_func == get_ai_move_random:
                 num_games = 10000
             else:
-                num_games = 3
+                num_games = 2
 
             stats = run_multiple_games(
                 num_games=num_games, ai_func=ai_func, verbose=verbose

@@ -313,9 +313,7 @@ def run_multiple_games(
             current_player = -current_player
 
             if verbose:
-                print(
-                    f"第 {move_count} 步: 玩家 {'A' if current_player == -1 else 'B'} 落子: {idx_to_xyz(move)}"
-                )
+                print(f"第 {move_count} 步: {idx_to_xyz(move)}")
 
         end_time = time.time()
         game_time = end_time - start_time
