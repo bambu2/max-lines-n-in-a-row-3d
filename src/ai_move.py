@@ -183,7 +183,7 @@ def minimax(state, depth, alpha, beta, is_maximizing, player):
         return min_eval
 
 
-def get_ai_move_minimax(state, player, depth=4):
+def get_ai_move_minimax(state, player, depth=6):
     """Minimax AI主函数"""
     best_score = -float("inf")
     best_move = None

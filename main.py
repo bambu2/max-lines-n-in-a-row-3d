@@ -5,9 +5,9 @@ from src.multiple_ai_test import multiple_ai_test
 def main():
     print("Hello from 3x3x3-tic-tac-toe-without-the-center-cell!")
 
-    single_ai_test(verbose=True)
+    # single_ai_test(verbose=True)
 
-    # multiple_ai_test()
+    multiple_ai_test(weak_first=True)
 
 
 if __name__ == "__main__":
