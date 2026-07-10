@@ -10,9 +10,9 @@ from src.utils import run_multiple_games, print_stats
 
 def single_ai_test(verbose=False):
     ai_func_list = [
-        # get_ai_move_random,
-        # get_ai_move_greedy,
-        # get_ai_move_advanced,
+        get_ai_move_random,
+        get_ai_move_greedy,
+        get_ai_move_advanced,
         get_ai_move_minimax,
         get_ai_move_mcts,
     ]

@@ -113,15 +113,15 @@ def get_ai_move_advanced(state, player):
 
         # 位置加成
         position_bonus = 0
-        l, r, c = idx_to_xyz(idx)
-        if idx == 13:  # 中心（虽然不能用，但还是留着）
+        layer, r, c = idx_to_xyz(idx)
+        if idx == center_idx:  # 中心（虽然不能用，但还是留着）
             position_bonus = 0
-        elif l in (0, 2) and r in (0, 2) and c in (0, 2):
+        elif layer in (0, 2) and r in (0, 2) and c in (0, 2):
             position_bonus = 3  # 角格
         elif (
-            (l == 1 and r in (0, 2) and c in (0, 2))
-            or (r == 1 and l in (0, 2) and c in (0, 2))
-            or (c == 1 and l in (0, 2) and r in (0, 2))
+            (layer == 1 and r in (0, 2) and c in (0, 2))
+            or (r == 1 and layer in (0, 2) and c in (0, 2))
+            or (c == 1 and layer in (0, 2) and r in (0, 2))
         ):
             position_bonus = 2  # 边心格
 
@@ -137,7 +137,7 @@ def get_ai_move_advanced(state, player):
 def minimax(state, depth, alpha, beta, is_maximizing, player):
     """Minimax搜索 + Alpha-Beta剪枝"""
     # 如果到达终局或深度限制
-    if state.move_count >= 26 or depth == 0:
+    if state.is_terminal() or depth == 0:
         # 评估当前局面
         return evaluate_board(state, player)
 
@@ -183,7 +183,7 @@ def minimax(state, depth, alpha, beta, is_maximizing, player):
         return min_eval
 
 
-def get_ai_move_minimax(state, player, depth=6):
+def get_ai_move_minimax(state, player, depth=4):
     """Minimax AI主函数"""
     best_score = -float("inf")
     best_move = None
@@ -210,20 +210,25 @@ def get_ai_move_minimax(state, player, depth=6):
 
 
 def evaluate_board(state, player):
-    """评估当前局面的得分"""
-    # 终局评估
     if state.move_count >= 26:
-        if state.score_A > state.score_B:
-            return 1000 if player == 1 else -1000
-        elif state.score_B > state.score_A:
-            return 1000 if player == -1 else -1000
+        # 从player视角看：player得分高就赢
+        if player == 1:
+            my_score, opp_score = state.score_A, state.score_B
+        else:
+            my_score, opp_score = state.score_B, state.score_A
+        
+        if my_score > opp_score:
+            return 1000
+        elif opp_score > my_score:
+            return -1000
         else:
             return 0
-
-    # 中间局面评估
-    score_diff = state.score_A - state.score_B
-    return score_diff * 10  # 转换回玩家视角
-
+    
+    # 中间局面：从player视角计算差值
+    if player == 1:
+        return (state.score_A - state.score_B) * 10
+    else:
+        return (state.score_B - state.score_A) * 10
 
 class MCTSNode:
     """MCTS 节点"""
@@ -245,7 +250,7 @@ class MCTSNode:
         """检查游戏是否结束"""
         if self.state is None:
             return True
-        return self.state.move_count >= 26
+        return self.state.is_terminal()
 
     def best_child(self, exploration_constant=1.41):
         """
