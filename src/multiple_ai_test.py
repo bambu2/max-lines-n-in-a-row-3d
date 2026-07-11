@@ -1,21 +1,20 @@
-from src.ai_move import (
-    get_ai_move_random,
-    get_ai_move_greedy,
-    get_ai_move_advanced,
-    get_ai_move_minimax,
-    get_ai_move_mcts,
+from src.algorithms import (
+    get_move_random,
+    get_move_greedy,
+    get_move_advanced,
+    get_move_minimax,
+    get_move_mcts,
 )
-
 from src.utils import run_ai_vs_ai, print_stats
 
 
 def multiple_ai_test(weak_first=True):
     ai_func_list = [
-        get_ai_move_random,
-        get_ai_move_greedy,
-        get_ai_move_advanced,
-        get_ai_move_minimax,
-        get_ai_move_mcts,
+        get_move_random,
+        get_move_greedy,
+        get_move_advanced,
+        get_move_minimax,
+        get_move_mcts,
     ]
     num_games = 100  # 每对AI之间的对局数
     try:
