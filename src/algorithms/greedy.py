@@ -1,4 +1,4 @@
-def get_move_greedy(state, player):
+def get_move_greedy(state, player) -> int | None:
     """选择能立即形成最多线的位置"""
     best_score = -1
     best_move = None

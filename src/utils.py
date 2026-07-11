@@ -1,45 +1,41 @@
 import time
 
 
-class GameState:
+class State:
     """3x3x3 无中心块井字棋游戏状态"""
 
     def __init__(self):
-        """初始化游戏状态"""
         self.board = [0] * 27  # 0=空, 1=玩家A, -1=玩家B
-        self.lines = self._generate_all_lines_no_center()  # 所有有效线（索引列表）
-        self.score_A = 0  # 玩家A完成的线数
-        self.score_B = 0  # 玩家B完成的线数
-        self.move_count = 0  # 已下步数
-        self.center_idx = 13  # 中心格索引 (1,1,1)
-        self.current_player = 1  # 当前玩家 (1=A, -1=B)
+        self.lines = self._generate_all_lines_no_center()
+        self.score_A = 0
+        self.score_B = 0
+        self.move_count = 0
+        self.center_idx = 13
+        self.current_player = 1
 
     def _generate_all_lines_no_center(self):
-        """生成所有不经过中心的线（返回索引列表）"""
-        # 先生成所有坐标线
-        coord_lines = self._generate_coord_lines()
-        idx_lines = []
+        all_lines = self._generate_all_lines()
+        selected_lines = []
 
-        for line in coord_lines:
+        for line in all_lines:
             if (1, 1, 1) not in line:  # 排除经过中心的线
                 idx_line = [xyz_to_idx(*coord) for coord in line]
-                idx_lines.append(idx_line)
+                selected_lines.append(idx_line)
 
-        return idx_lines
+        return selected_lines
 
-    def _generate_coord_lines(self):
-        """生成所有49条线的坐标表示"""
+    def _generate_all_lines(self):
         lines = []
 
         # 1. X轴方向 (每层每行)
-        for l in range(3):
+        for layer in range(3):
             for r in range(3):
-                lines.append([(l, r, 0), (l, r, 1), (l, r, 2)])
+                lines.append([(layer, r, 0), (layer, r, 1), (layer, r, 2)])
 
         # 2. Y轴方向 (每层每列)
-        for l in range(3):
+        for layer in range(3):
             for c in range(3):
-                lines.append([(l, 0, c), (l, 1, c), (l, 2, c)])
+                lines.append([(layer, 0, c), (layer, 1, c), (layer, 2, c)])
 
         # 3. Z轴方向 (跨层)
         for r in range(3):
@@ -47,9 +43,9 @@ class GameState:
                 lines.append([(0, r, c), (1, r, c), (2, r, c)])
 
         # 4. 每层对角线 (3层 × 2条)
-        for l in range(3):
-            lines.append([(l, 0, 0), (l, 1, 1), (l, 2, 2)])
-            lines.append([(l, 0, 2), (l, 1, 1), (l, 2, 0)])
+        for layer in range(3):
+            lines.append([(layer, 0, 0), (layer, 1, 1), (layer, 2, 2)])
+            lines.append([(layer, 0, 2), (layer, 1, 1), (layer, 2, 0)])
 
         # 5. 跨层对角线
         for r in range(3):
@@ -68,7 +64,7 @@ class GameState:
 
         return lines
 
-    def is_valid_move(self, idx):
+    def is_valid_move(self, idx) -> bool:
         """检查走法是否合法"""
         if idx == self.center_idx:  # 中心不可用
             return False
@@ -76,15 +72,14 @@ class GameState:
             return False
         return self.board[idx] == 0  # 空位
 
-    def get_valid_moves(self):
-        """获取所有合法走法"""
+    def get_valid_moves(self) -> list:
         moves = []
         for idx in range(27):
             if self.is_valid_move(idx):
                 moves.append(idx)
         return moves
 
-    def make_move(self, idx, player):
+    def make_move(self, idx, player) -> bool:
         """
         执行走法
 
@@ -95,16 +90,7 @@ class GameState:
         Returns:
             bool: 是否成功
         """
-        # ========== 防御检查 ==========
-        if not self.is_valid_move(idx):
-            print(f"❌ 非法走法: 位置 {idx} 不可用")
-            return False
 
-        if player not in (1, -1):
-            print(f"❌ 非法玩家: {player}")
-            return False
-
-        # ========== 执行落子 ==========
         self.board[idx] = player
         self.move_count += 1
 
@@ -129,33 +115,15 @@ class GameState:
                     self.score_B += 1
                 lines_completed += 1
 
-        # ========== 更新当前玩家 ==========
         self.current_player = -player
 
         return True
 
-    def is_terminal(self):
+    def is_terminal(self) -> bool:
         """检查游戏是否结束（所有格子下满）"""
         return self.move_count >= 26
 
-    def get_winner(self):
-        """
-        获取获胜者
-
-        Returns:
-            int: 1 (A赢), -1 (B赢), 0 (平局)
-        """
-        if not self.is_terminal():
-            return None
-
-        if self.score_A > self.score_B:
-            return 1
-        elif self.score_B > self.score_A:
-            return -1
-        else:
-            return 0
-
-    def get_score(self, player):
+    def get_score(self, player) -> int:
         """获取指定玩家的得分"""
         if player == 1:
             return self.score_A
@@ -165,8 +133,7 @@ class GameState:
             return 0
 
     def copy(self):
-        """深拷贝游戏状态"""
-        new_state = GameState()
+        new_state = State()
         new_state.board = self.board.copy()
         new_state.score_A = self.score_A
         new_state.score_B = self.score_B
@@ -175,30 +142,8 @@ class GameState:
         # lines 和 center_idx 是只读的，可以共享
         return new_state
 
-    def __str__(self):
-        """打印棋盘（人类可读）"""
-        symbols = {0: "·", 1: "X", -1: "O"}
-        result = []
-
-        for layer in range(3):
-            result.append(f"\n=== 第 {layer + 1} 层 ===")
-            for row in range(3):
-                line = []
-                for col in range(3):
-                    idx = xyz_to_idx(layer, row, col)
-                    if idx == self.center_idx:
-                        line.append("✦")
-                    else:
-                        line.append(symbols[self.board[idx]])
-                result.append("  ".join(line))
-            result.append("   " + "-" * 11)
-
-        return "\n".join(result)
-
 
 class Stats:
-    """统计信息类"""
-
     def __init__(self):
         self.total_games = 0
         self.wins_A = 0
@@ -212,15 +157,12 @@ class Stats:
         self.win_rate_A = 0.0
         self.win_rate_B = 0.0
         self.draw_rate = 0.0
-        self.move_counts = []
         self.game_times = []
 
     def update(self, state, game_time):
-        """更新统计信息"""
         self.total_games += 1
         self.score_A_list.append(state.score_A)
         self.score_B_list.append(state.score_B)
-        self.move_counts.append(state.move_count)
         self.game_times.append(game_time)
 
         if state.score_A > state.score_B:
@@ -230,25 +172,26 @@ class Stats:
         else:
             self.draws += 1
 
-    def get_stats(self):
-        """计算并返回统计结果"""
-        num_games = self.total_games
-        return {
-            "total_games": num_games,
-            "wins_A": self.wins_A,
-            "wins_B": self.wins_B,
-            "draws": self.draws,
-            "avg_score_A": sum(self.score_A_list) / num_games if num_games > 0 else 0.0,
-            "avg_score_B": sum(self.score_B_list) / num_games if num_games > 0 else 0.0,
-            "avg_time": sum(self.game_times) / num_games if num_games > 0 else 0.0,
-            "win_rate_A": self.wins_A / num_games if num_games > 0 else 0.0,
-            "win_rate_B": self.wins_B / num_games if num_games > 0 else 0.0,
-            "draw_rate": self.draws / num_games if num_games > 0 else 0.0,
-        }
+    def result_update(self):
+        self.avg_score_A = (
+            sum(self.score_A_list) / self.total_games if self.total_games > 0 else 0.0
+        )
+        self.avg_score_B = (
+            sum(self.score_B_list) / self.total_games if self.total_games > 0 else 0.0
+        )
+        self.avg_time = (
+            sum(self.game_times) / self.total_games if self.total_games > 0 else 0.0
+        )
+        self.win_rate_A = (
+            self.wins_A / self.total_games if self.total_games > 0 else 0.0
+        )
+        self.win_rate_B = (
+            self.wins_B / self.total_games if self.total_games > 0 else 0.0
+        )
+        self.draw_rate = self.draws / self.total_games if self.total_games > 0 else 0.0
 
 
 def print_board(board):
-    """打印3x3x3棋盘的当前状态"""
     symbols = {0: "·", 1: "X", -1: "O"}
 
     for layer in range(3):
@@ -257,7 +200,7 @@ def print_board(board):
             line = ""
             for col in range(3):
                 idx = xyz_to_idx(layer, row, col)
-                if idx == 13:  # 中心格 (1,1,1)
+                if idx == board.center_idx:
                     line += " ✦ "  # 用特殊符号标记不可用中心
                 else:
                     line += f" {symbols[board[idx]]} "
@@ -284,7 +227,7 @@ def run_multiple_games(
 
     # 如果没有指定AI，使用随机AI
     if ai_func is None:
-        raise ValueError("ai_func must be provided")
+        raise Exception("ai_func must be provided")
 
     for game_num in range(num_games):
         if verbose:
@@ -292,24 +235,19 @@ def run_multiple_games(
 
         start_time = time.time()
 
-        # 创建新游戏
-        state = GameState()
-        current_player = 1  # A先手
+        state = State()
+        current_player = 1
         move_count = 0
 
         while move_count < max_moves:
-            # AI走棋
             move = ai_func(state, current_player)
 
             if move is None:
-                if verbose:
-                    print(f"⚠️ 没有合法移动，游戏提前结束")
                 break
 
             state.make_move(move, current_player)
             move_count += 1
 
-            # 切换玩家
             current_player = -current_player
 
             if verbose:
@@ -318,30 +256,21 @@ def run_multiple_games(
         end_time = time.time()
         game_time = end_time - start_time
 
-        # 记录数据
         stats.update(state, game_time)
 
         if verbose:
             print_board(state.board)
 
-    # 计算平均值和统计信息
-    stats.avg_score_A = sum(stats.score_A_list) / num_games if num_games > 0 else 0.0
-    stats.avg_score_B = sum(stats.score_B_list) / num_games if num_games > 0 else 0.0
-    stats.avg_time = sum(stats.game_times) / num_games if num_games > 0 else 0.0
-    stats.win_rate_A = stats.wins_A / num_games if num_games > 0 else 0.0
-    stats.win_rate_B = stats.wins_B / num_games if num_games > 0 else 0.0
-    stats.draw_rate = stats.draws / num_games if num_games > 0 else 0.0
+    stats.result_update()
 
     return stats
 
 
 def xyz_to_idx(layer, row, col):
-    """三维坐标 → 一维索引"""
     return layer * 9 + row * 3 + col
 
 
 def idx_to_xyz(idx):
-    """一维索引 → 三维坐标"""
     layer = idx // 9
     row = (idx % 9) // 3
     col = idx % 3
@@ -349,31 +278,30 @@ def idx_to_xyz(idx):
 
 
 def print_stats(stats, verbose=False) -> None:
-    """打印统计结果"""
-    print(f"🏆 胜负统计:")
+    print("🏆 胜负统计:")
     print(f"  玩家A胜: {stats.wins_A} ({rate_to_percentage(stats.win_rate_A)})")
     print(f"  玩家B胜: {stats.wins_B} ({rate_to_percentage(stats.win_rate_B)})")
     print(f"  平局:    {stats.draws} ({rate_to_percentage(stats.draw_rate)})")
     print()
-    print(f"📈连线数统计:")
-    print(f"  玩家 A 连线数")
+    print("📈连线数统计:")
+    print("  玩家 A 连线数")
     print(
         f"    最高: {max(stats.score_A_list)}, 最低: {min(stats.score_A_list)}, 平均: {stats.avg_score_A:.2f}"
     )
-    print(f"  玩家 B 连线数")
+    print("  玩家 B 连线数")
     print(
         f"    最高: {max(stats.score_B_list)}, 最低: {min(stats.score_B_list)}, 平均: {stats.avg_score_B:.2f}"
     )
     print(f"  平均连线数差: {stats.avg_score_A - stats.avg_score_B:.2f}")
     print()
     if verbose:
-        print(f"⏱️ 步数/时间:")
+        print("⏱️ 步数/时间:")
         print(f"  平均每局耗时: {stats.avg_time:.4f}秒")
         print(f"  总耗时:   {sum(stats.game_times):.2f}秒")
         print()
 
 
-def run_ai_vs_ai(ai1, ai2, num_games=100) -> Stats:
+def run_ai1_vs_ai2(ai1, ai2, num_games=100) -> Stats:
     """
     运行两个AI对战（AI1先手，AI2后手）
     """
@@ -381,14 +309,13 @@ def run_ai_vs_ai(ai1, ai2, num_games=100) -> Stats:
     stats = Stats()
 
     for _ in range(num_games):
-        state = GameState()
+        state = State()
         current_player = 1
         move_count = 0
 
         start_time = time.time()
 
         while move_count < 26:
-            # 选择AI
             if current_player == 1:
                 move = ai1(state, current_player)
             else:
@@ -405,7 +332,6 @@ def run_ai_vs_ai(ai1, ai2, num_games=100) -> Stats:
 
         stats.score_A_list.append(state.score_A)
         stats.score_B_list.append(state.score_B)
-        stats.move_counts.append(move_count)
         stats.game_times.append(end_time - start_time)
 
         if state.score_A > state.score_B:
@@ -415,17 +341,10 @@ def run_ai_vs_ai(ai1, ai2, num_games=100) -> Stats:
         else:
             stats.draws += 1
 
-    # 计算统计信息
-    stats.avg_score_A = sum(stats.score_A_list) / num_games
-    stats.avg_score_B = sum(stats.score_B_list) / num_games
-    stats.avg_time = sum(stats.game_times) / num_games if num_games > 0 else 0.0
-    stats.win_rate_A = stats.wins_A / num_games
-    stats.win_rate_B = stats.wins_B / num_games
-    stats.draw_rate = stats.draws / num_games
+    stats.result_update()
 
     return stats
 
 
 def rate_to_percentage(rate):
-    """将胜率转换为百分比字符串"""
     return f"{rate * 100:.1f}%"

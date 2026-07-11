@@ -1,7 +1,7 @@
 import random
 import math
 
-from src.utils import GameState
+from src.utils import State
 
 
 class MCTSNode:
@@ -61,12 +61,12 @@ class MCTS:
         初始化 MCTS
 
         Args:
-            state: GameState 对象
+            state: State 对象
             iterations: 模拟次数
             exploration_constant: 探索常数（越大越倾向于探索）
         """
         if state is None:
-            raise ValueError("state 不能为 None")
+            raise Exception("state 不能为 None")
 
         self.root = MCTSNode(state)
         self.iterations = max(1, iterations)  # 至少1次
@@ -378,7 +378,7 @@ class MCTS:
             return None
 
         # ========== 浅拷贝 + 深拷贝列表 ==========
-        new_state = GameState()
+        new_state = State()
         new_state.board = state.board.copy()  # 列表拷贝
         new_state.score_A = state.score_A
         new_state.score_B = state.score_B
