@@ -108,7 +108,6 @@ class State:
                     break
 
             if is_complete:
-                # 计数
                 if player == 1:
                     self.score_A += 1
                 else:
@@ -120,7 +119,6 @@ class State:
         return True
 
     def is_terminal(self) -> bool:
-        """检查游戏是否结束（所有格子下满）"""
         return self.move_count >= 26
 
     def get_score(self, player) -> int:
@@ -160,7 +158,6 @@ class Stats:
         self.game_times = []
 
     def update(self, state, game_time):
-        self.total_games += 1
         self.score_A_list.append(state.score_A)
         self.score_B_list.append(state.score_B)
         self.game_times.append(game_time)
@@ -191,7 +188,7 @@ class Stats:
         self.draw_rate = self.draws / self.total_games if self.total_games > 0 else 0.0
 
 
-def print_board(board):
+def print_board(state: State):
     symbols = {0: "·", 1: "X", -1: "O"}
 
     for layer in range(3):
@@ -200,70 +197,11 @@ def print_board(board):
             line = ""
             for col in range(3):
                 idx = xyz_to_idx(layer, row, col)
-                if idx == board.center_idx:
+                if idx == state.center_idx:
                     line += " ✦ "  # 用特殊符号标记不可用中心
                 else:
-                    line += f" {symbols[board[idx]]} "
+                    line += f" {symbols[state.board[idx]]} "
             print(line)
-
-
-def run_multiple_games(
-    num_games=100, ai_func=None, verbose=False, max_moves=26
-) -> Stats:
-    """
-    运行多次对局并统计结果
-
-    Args:
-        num_games: 对局次数
-        ai_func: AI函数，如果为None则使用随机AI
-        verbose: 是否打印每局详细信息
-        max_moves: 最大步数（26步，因为中心不可用）
-
-    Returns:
-        Stats: 统计结果
-    """
-
-    stats = Stats()
-
-    # 如果没有指定AI，使用随机AI
-    if ai_func is None:
-        raise Exception("ai_func must be provided")
-
-    for game_num in range(num_games):
-        if verbose:
-            print(f"第 {game_num + 1}/{num_games} 局")
-
-        start_time = time.time()
-
-        state = State()
-        current_player = 1
-        move_count = 0
-
-        while move_count < max_moves:
-            move = ai_func(state, current_player)
-
-            if move is None:
-                break
-
-            state.make_move(move, current_player)
-            move_count += 1
-
-            current_player = -current_player
-
-            if verbose:
-                print(f"第 {move_count} 步: {idx_to_xyz(move)}")
-
-        end_time = time.time()
-        game_time = end_time - start_time
-
-        stats.update(state, game_time)
-
-        if verbose:
-            print_board(state.board)
-
-    stats.result_update()
-
-    return stats
 
 
 def xyz_to_idx(layer, row, col):
@@ -275,6 +213,10 @@ def idx_to_xyz(idx):
     row = (idx % 9) // 3
     col = idx % 3
     return layer, row, col
+
+
+def rate_to_percentage(rate):
+    return f"{rate * 100:.1f}%"
 
 
 def print_stats(stats, verbose=False) -> None:
@@ -301,21 +243,25 @@ def print_stats(stats, verbose=False) -> None:
         print()
 
 
-def run_ai1_vs_ai2(ai1, ai2, num_games=100) -> Stats:
+def run_ai1_vs_ai2(ai1, ai2, total_games=100, verbose=False, max_moves=26) -> Stats:
     """
     运行两个AI对战（AI1先手，AI2后手）
     """
 
     stats = Stats()
+    stats.total_games = total_games
 
-    for _ in range(num_games):
+    for i in range(total_games):
+        if verbose:
+            print(f"第 {i + 1}/{total_games} 局")
+
         state = State()
         current_player = 1
         move_count = 0
 
         start_time = time.time()
 
-        while move_count < 26:
+        while move_count < max_moves:
             if current_player == 1:
                 move = ai1(state, current_player)
             else:
@@ -328,23 +274,17 @@ def run_ai1_vs_ai2(ai1, ai2, num_games=100) -> Stats:
             move_count += 1
             current_player = -current_player
 
+            if verbose:
+                print(f"第 {move_count} 步: {idx_to_xyz(move)}")
+
         end_time = time.time()
+        game_time = end_time - start_time
 
-        stats.score_A_list.append(state.score_A)
-        stats.score_B_list.append(state.score_B)
-        stats.game_times.append(end_time - start_time)
+        stats.update(state, game_time)
 
-        if state.score_A > state.score_B:
-            stats.wins_A += 1
-        elif state.score_B > state.score_A:
-            stats.wins_B += 1
-        else:
-            stats.draws += 1
+        if verbose:
+            print_board(state)
 
     stats.result_update()
 
     return stats
-
-
-def rate_to_percentage(rate):
-    return f"{rate * 100:.1f}%"

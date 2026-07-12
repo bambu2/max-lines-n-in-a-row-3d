@@ -4,7 +4,7 @@ from src.set_ai_order import Order
 
 def main():
     print("Hello from tic-tac-toe-3x3x3-without-the-center-cell!")
-    set_ai_order(Order.SAME_LEVEL, verbose=False)
+    set_ai_order(Order.WEAK_FIRST, verbose=False)
 
 
 if __name__ == "__main__":

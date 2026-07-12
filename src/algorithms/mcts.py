@@ -14,6 +14,9 @@ class MCTSNode:
         self.children = []
         self.wins = 0
         self.visits = 0
+        self.player_to_move = (
+            1 if state is None else -1
+        )  # 默认当前玩家为1，如果state存在则为-1
         self.untried_moves = state.get_valid_moves() if state else []
 
     def is_fully_expanded(self):
@@ -122,7 +125,7 @@ class MCTS:
                     continue
 
                 # 3. 模拟
-                winner = self._simulate(node.state)
+                winner = self._simulate(node.state, player_to_start=node.player_to_move)
 
                 # 4. 回传
                 self._backpropagate(node, winner)
@@ -164,13 +167,6 @@ class MCTS:
         return self._select(best_child)
 
     def _expand(self, node):
-        """
-        扩展阶段：从未尝试的走法中选一个，创建子节点
-
-        Returns:
-            MCTSNode: 新创建的子节点，如果没有可扩展的则返回原节点
-        """
-        # ========== 防御1：检查输入 ==========
         if node is None:
             print("⚠️ _expand: node 为 None")
             return None
@@ -227,8 +223,9 @@ class MCTS:
                 print("❌ _expand: 复制状态失败")
                 return node
 
-            # 执行走法
-            success = new_state.make_move(move, self.current_player)
+            current_player = -self.current_player  # 切换玩家
+
+            success = new_state.make_move(move, current_player)
             if not success:
                 print(f"❌ _expand: 走法 {move} 执行失败")
                 return node
@@ -237,9 +234,9 @@ class MCTS:
             print(f"❌ _expand: 创建新状态失败: {e}")
             return node
 
-        # ========== 创建子节点 ==========
         try:
             child_node = MCTSNode(new_state, parent=node, move=move)
+            child_node.player_to_move = -current_player
             node.children.append(child_node)
         except Exception as e:
             print(f"❌ _expand: 创建子节点失败: {e}")
@@ -247,7 +244,7 @@ class MCTS:
 
         return child_node
 
-    def _simulate(self, state):
+    def _simulate(self, state, player_to_start) -> int:
         """
         模拟阶段：从当前状态开始随机下到终局
 
@@ -273,8 +270,7 @@ class MCTS:
         if sim_state is None:
             return 0
 
-        player = self.current_player
-
+        player = player_to_start
         # ========== 防御4：限制模拟步数 ==========
         try:
             max_steps = 26 - sim_state.move_count
@@ -316,25 +312,11 @@ class MCTS:
         return self._get_winner(sim_state)
 
     def _backpropagate(self, node, winner):
-        """
-        回传阶段：从节点一直更新到根节点
-
-        Args:
-            node: 起始节点
-            winner: 获胜玩家 (1: A赢, -1: B赢, 0: 平局)
-        """
-        # ========== 防御1：检查输入 ==========
-        if node is None:
-            return
-
         current = node
         while current is not None:
             current.visits += 1
-
-            # 只有当前玩家赢了才加分
-            if winner == self.current_player:
+            if winner == current.player_to_move:
                 current.wins += 1
-
             current = current.parent
 
     def _get_best_move(self):
@@ -344,18 +326,17 @@ class MCTS:
         Returns:
             int: 最佳走法的索引，如果没有则返回 None
         """
-        # ========== 防御1：检查根节点 ==========
         if self.root is None:
             return None
 
-        # ========== 防御2：检查是否有子节点 ==========
         if not self.root.children:
             # 如果没有子节点，从根节点获取合法走法
             valid_moves = self.root.state.get_valid_moves()
             return valid_moves[0] if valid_moves else None
 
-        # ========== 选择访问次数最多的子节点 ==========
-        best_child = max(self.root.children, key=lambda c: c.visits)
+        best_child = max(
+            self.root.children, key=lambda c: c.wins / c.visits if c.visits > 0 else 0
+        )
 
         if best_child is None:
             valid_moves = self.root.state.get_valid_moves()
@@ -387,11 +368,9 @@ class MCTS:
         return new_state
 
     def _get_winner(self, state):
-        """判断胜负 - 根据分数判断"""
         if state is None:
             return 0
 
-        # 假设状态有 is_terminal 方法
         if hasattr(state, "is_terminal") and not state.is_terminal():
             return 0
 
@@ -417,35 +396,28 @@ def get_move_mcts(state, player, iterations=500):
     Returns:
         int: 最佳走法索引，如果没有则返回 None
     """
-    # ========== 防御1：检查输入 ==========
     if state is None:
         print("❌ 错误：state 为 None")
         return None
 
-    # ========== 防御2：检查是否有合法走法 ==========
     valid_moves = state.get_valid_moves()
     if not valid_moves:
         print("ℹ️ 没有合法走法")
         return None
 
-    # ========== 防御3：如果只有一个走法，直接返回 ==========
     if len(valid_moves) == 1:
         return valid_moves[0]
 
-    # ========== 执行 MCTS ==========
     try:
         mcts = MCTS(state, iterations=iterations)
         mcts.current_player = player
         best_move = mcts.search()
 
-        # ========== 防御4：检查搜索结果 ==========
         if best_move is None:
-            # 保底：返回第一个合法走法
             return valid_moves[0]
 
         return best_move
 
     except Exception as e:
         print(f"❌ MCTS 搜索失败: {e}")
-        # 保底：返回第一个合法走法
         return valid_moves[0] if valid_moves else None
