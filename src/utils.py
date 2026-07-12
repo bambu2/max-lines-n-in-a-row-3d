@@ -1,4 +1,3 @@
-
 def xyz_to_idx(layer, row, col):
     return layer * 9 + row * 3 + col
 
@@ -12,6 +11,3 @@ def idx_to_xyz(idx):
 
 def rate_to_percentage(rate: float) -> str:
     return f"{rate * 100:.1f}%"
-
-
-

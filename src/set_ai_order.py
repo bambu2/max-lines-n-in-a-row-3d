@@ -16,19 +16,28 @@ class Order(Enum):
     SAME_LEVEL = 3
 
 
-def get_total_games(ai1, ai2, order: Order) -> int:
+def get_total_games(first_player, second_player, order: Order) -> int:
     if order == Order.WEAK_FIRST:
         return 100
     elif order == Order.STRONG_FIRST:
         return 100
     elif order == Order.SAME_LEVEL:
-        if ai1.__name__ == "get_move_random" and ai2.__name__ == "get_move_random":
-            return 10  # random vs random is fast, so increase the number of games
-        elif ai1.__name__ == "get_move_minimax" and ai2.__name__ == "get_move_minimax":
-            return 0  # minimax vs minimax is slow, so reduce the number of games
-        elif ai1.__name__ == "get_move_mcts" and ai2.__name__ == "get_move_mcts":
-            return 0  # mcts vs mcts is slow, so reduce the number of games
-        return 0
+        if (
+            first_player.__name__ == "get_move_random"
+            and second_player.__name__ == "get_move_random"
+        ):
+            return 10000  # random vs random is fast, so increase the number of games
+        elif (
+            first_player.__name__ == "get_move_minimax"
+            and second_player.__name__ == "get_move_minimax"
+        ):
+            return 10  # minimax vs minimax is slow, so reduce the number of games
+        elif (
+            first_player.__name__ == "get_move_mcts"
+            and second_player.__name__ == "get_move_mcts"
+        ):
+            return 10  # mcts vs mcts is slow, so reduce the number of games
+        return 100
     else:
         return 100
 

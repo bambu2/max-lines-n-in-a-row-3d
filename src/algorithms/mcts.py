@@ -22,7 +22,7 @@ class MCTSNode:
             self.player_to_move = player_to_move
 
         # 初始化未尝试走法
-        self.untried_moves = state.legal_moves if state else []
+        self.untried_moves = state._legal_moves if state else []
 
     def is_fully_expanded(self):
         return len(self.untried_moves) == 0
@@ -76,7 +76,7 @@ class MCTS:
             print("ℹ️ 游戏已结束，没有走法")
             return None
 
-        valid_moves = self.root.state.legal_moves
+        valid_moves = self.root.state._legal_moves
         if not valid_moves:
             return None
 
@@ -174,7 +174,7 @@ class MCTS:
         steps = 0
         max_sim_steps = min(max_steps, 30)  # 防死循环
         while sim_state.move_count < 26 and steps < max_sim_steps:
-            valid_moves = sim_state.legal_moves
+            valid_moves = sim_state._legal_moves
             if not valid_moves:
                 break
             move = random.choice(valid_moves)
@@ -196,7 +196,7 @@ class MCTS:
     def _get_best_move(self):
         if self.root is None or not self.root.children:
             # 无子节点时，随便返回一个合法走法
-            valid_moves = self.root.state.legal_moves
+            valid_moves = self.root.state._legal_moves
             return valid_moves[0] if valid_moves else None
 
         # 选胜率最高的孩子（若访问量为 0，胜率视为 0）
@@ -211,8 +211,8 @@ class MCTS:
             return None
         new_state = GameState()
         new_state.board = state.board.copy()
-        new_state.score_first_player = state.score_A
-        new_state.score_second_player = state.score_B
+        new_state.score_first_player = state.score_first_player
+        new_state.score_second_player = state.score_second_player
         new_state.move_count = state.move_count
         # lines 和 center_idx 为只读，共享即可
         return new_state
@@ -224,9 +224,9 @@ class MCTS:
             or not state.is_terminal()
         ):
             return 0
-        if state.score_A > state.score_B:
+        if state.score_first_player > state.score_second_player:
             return 1
-        elif state.score_B > state.score_A:
+        elif state.score_second_player > state.score_first_player:
             return -1
         return 0
 

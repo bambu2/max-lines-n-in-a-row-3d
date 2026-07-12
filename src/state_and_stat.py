@@ -4,34 +4,27 @@ from tqdm import tqdm
 from src.utils import xyz_to_idx, idx_to_xyz, rate_to_percentage
 
 
-@dataclass()
 class GameState:
-    board: list = [0] * 27  # 0=空, 1=玩家A, -1=玩家B
-    score_first_player: int = 0
-    score_second_player: int = 0
-    move_count: int = 0
-    current_player = 1
-    move_history = []
-
     def __init__(self):
+        self.board: list = [0] * 27  # 0=空, 1=玩家A, -1=玩家B
+        self.score_first_player: int = 0
+        self.score_second_player: int = 0
+        self.move_count: int = 0
+        self.current_player: int = 1
+        self.move_history: list = []
         self.lines = self._select_lines()
         self.banned_idx = 13
-        self.legal_moves = []
+        self._legal_moves = [idx for idx in range(27)]
 
     def is_legal_move(self, idx) -> bool:
-        return (self.board[idx] == 0) and (idx in self.legal_moves)
+        return (self.board[idx] == 0) and (idx in self._legal_moves)
 
     @property
-    def legal_moves(self):
-        return self.legal_moves
-
-    @legal_moves.setter
     def legal_moves(self) -> list:
         moves = []
-        for idx in self.legal_moves:
+        for idx in self._legal_moves:
             if self.is_legal_move:
                 moves.append(idx)
-        print(moves)
         return moves
 
     def _select_lines(self):
@@ -102,8 +95,8 @@ class GameState:
         undo_info = {
             "idx": idx,
             "previous_value": self.board[idx],
-            "score_A_before": self.score_first_player,
-            "score_B_before": self.score_second_player,
+            "score_first_player_before": self.score_first_player,
+            "score_second_player_before": self.score_second_player,
             "player": player,
         }
 
@@ -152,8 +145,8 @@ class GameState:
         self.board[undo_info["idx"]] = undo_info["previous_value"]
 
         # Restore scores
-        self.score_first_player = undo_info["score_A_before"]
-        self.score_second_player = undo_info["score_B_before"]
+        self.score_first_player = undo_info["score_first_player_before"]
+        self.score_second_player = undo_info["score_second_player_before"]
 
         # Decrement move count
         self.move_count -= 1
@@ -161,15 +154,15 @@ class GameState:
         return True
 
     def undo_move_without_history(
-        self, idx, previous_value, score_A_before, score_B_before
+        self, idx, previous_value, score_first_player_before, score_second_player_before
     ):
         """
         Alternative: Undo a specific move without using history.
         Use this if you want to manually pass undo information.
         """
         self.board[idx] = previous_value
-        self.score_first_player = score_A_before
-        self.score_second_player = score_B_before
+        self.score_first_player = score_first_player_before
+        self.score_second_player = score_second_player_before
         self.move_count -= 1
 
     def is_terminal(self) -> bool:
@@ -218,13 +211,13 @@ class Stats:
     total_time = []
 
     def update(self, state, game_time):
-        self.scores_first_player.append(state.score_A)
-        self.scores_second_player.append(state.score_B)
+        self.scores_first_player.append(state.score_first_player)
+        self.scores_second_player.append(state.score_second_player)
         self.total_time.append(game_time)
 
-        if state.score_A > state.score_B:
+        if state.score_first_player > state.score_second_player:
             self.wins_first_player += 1
-        elif state.score_B > state.score_A:
+        elif state.score_second_player > state.score_first_player:
             self.wins_second_player += 1
         else:
             self.draws += 1
@@ -251,7 +244,7 @@ class Stats:
         )
         self.draw_rate = self.draws / self.total_games if self.total_games > 0 else 0.0
 
-    def print_stats(self) -> None:
+    def print_stats(self):
         print("🏆 胜负统计:")
         print(
             f"  先手胜: {self.wins_first_player} ({rate_to_percentage(self.win_rate_first_player)})"

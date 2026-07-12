@@ -1,16 +1,19 @@
-def get_move_minimax(state, player, depth=4) -> int | None:
+from src.state_and_stat import GameState
+
+
+def get_move_minimax(state: GameState, player, depth=4) -> int | None:
     """Get best move using minimax with alpha-beta pruning."""
 
-    if not state.valid_moves:
+    if not state.legal_moves:
         return None
-    if len(state.valid_moves) == 1:
-        return state.valid_moves[0]
+    if len(state.legal_moves) == 1:
+        return state.legal_moves[0]
 
     best_score = -float("inf")
-    best_move = state.valid_moves[0]
+    best_move = state.legal_moves[0]
     is_maximizing = player == 1
 
-    for idx in state.valid_moves:
+    for idx in state.legal_moves:
         # ✅ Make move
         state.make_move(idx, player)
 
@@ -36,13 +39,13 @@ def minimax(state, depth, alpha, beta, is_maximizing) -> float:
     if state.is_terminal() or depth == 0:
         return evaluate_board(state, current_player)
 
-    valid_moves = [idx for idx in range(27) if state.is_valid_move(idx)]
-    if not valid_moves:
+    legal_moves = [idx for idx in range(27) if state.is_valid_move(idx)]
+    if not legal_moves:
         return evaluate_board(state, current_player)
 
     if is_maximizing:
         max_eval = -float("inf")
-        for idx in valid_moves:
+        for idx in legal_moves:
             # ✅ Make move
             state.make_move(idx, 1)
 
@@ -60,7 +63,7 @@ def minimax(state, depth, alpha, beta, is_maximizing) -> float:
 
     else:
         min_eval = float("inf")
-        for idx in valid_moves:
+        for idx in legal_moves:
             # ✅ Make move
             state.make_move(idx, -1)
 
@@ -80,10 +83,10 @@ def minimax(state, depth, alpha, beta, is_maximizing) -> float:
 def evaluate_board(state, current_player):
     if state.is_terminal():
         # Who actually has more points?
-        if state.score_A > state.score_B:
+        if state.score_first_player > state.score_second_player:
             # Player 1 wins
             return 10000 if current_player == 1 else -10000
-        elif state.score_B > state.score_A:
+        elif state.score_second_player > state.score_first_player:
             # Player -1 wins
             return 10000 if current_player == -1 else -10000
         else:
@@ -91,9 +94,9 @@ def evaluate_board(state, current_player):
 
     # Mid-game evaluation from current_player's perspective
     if current_player == 1:
-        score_diff = state.score_A - state.score_B
+        score_diff = state.score_first_player - state.score_second_player
     else:
-        score_diff = state.score_B - state.score_A
+        score_diff = state.score_second_player - state.score_first_player
 
     # Add positional bonuses for strategic play
     positional_bonus = calculate_sophisticated_bonus(state, current_player)
@@ -113,7 +116,7 @@ def calculate_mobility_bonus(state, player):
 
     # Save current state
     board_backup = state.board.copy()
-    score_backup = (state.score_A, state.score_B)
+    score_second_playerackup = (state.score_first_player, state.score_second_player)
     move_count_backup = state.move_count
 
     # Count current player's moves
@@ -137,7 +140,7 @@ def calculate_mobility_bonus(state, player):
 
     # Restore state
     state.board = board_backup
-    state.score_A, state.score_B = score_backup
+    state.score_first_player, state.score_second_player = score_second_playerackup
     state.move_count = move_count_backup
 
     return (my_moves - opponent_moves) * 0.5
