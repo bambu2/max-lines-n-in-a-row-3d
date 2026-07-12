@@ -185,6 +185,21 @@ class GameState:
         # lines 和 center_idx 是只读的，可以共享
         return new_state
 
+    def print_board(self):
+        symbols = {0: "·", 1: "X", -1: "O"}
+
+        for layer in range(3):
+            print(f"\n=== 第 {layer + 1} 层 ===")
+            for row in range(3):
+                line = ""
+                for col in range(3):
+                    idx = xyz_to_idx(layer, row, col)
+                    if idx == self.banned_idx:
+                        line += " ✦ "  # 用特殊符号标记不可用中心
+                    else:
+                        line += f" {symbols[self.board[idx]]} "
+                print(line)
+
 
 @dataclass(slots=True)
 class Stats:
@@ -231,22 +246,6 @@ class Stats:
             self.wins_B / self.total_games if self.total_games > 0 else 0.0
         )
         self.draw_rate = self.draws / self.total_games if self.total_games > 0 else 0.0
-
-
-def print_board(state: GameState):
-    symbols = {0: "·", 1: "X", -1: "O"}
-
-    for layer in range(3):
-        print(f"\n=== 第 {layer + 1} 层 ===")
-        for row in range(3):
-            line = ""
-            for col in range(3):
-                idx = xyz_to_idx(layer, row, col)
-                if idx == state.banned_idx:
-                    line += " ✦ "  # 用特殊符号标记不可用中心
-                else:
-                    line += f" {symbols[state.board[idx]]} "
-            print(line)
 
 
 def xyz_to_idx(layer, row, col):
@@ -329,7 +328,7 @@ def get_ai1_vs_ai2_stats(
         stats.update(state, game_time)
 
         if verbose:
-            print_board(state)
+            state.print_board()
 
     stats.result_update()
 
