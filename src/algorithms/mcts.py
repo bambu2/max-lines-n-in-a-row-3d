@@ -1,7 +1,7 @@
 import random
 import math
 
-from src.utils import GameState
+from src.game_state import GameState
 
 
 class MCTSNode:
@@ -22,7 +22,7 @@ class MCTSNode:
             self.player_to_move = player_to_move
 
         # 初始化未尝试走法
-        self.untried_moves = state.valid_moves if state else []
+        self.untried_moves = state._legal_moves if state else []
 
     def is_fully_expanded(self):
         return len(self.untried_moves) == 0
@@ -76,7 +76,7 @@ class MCTS:
             print("ℹ️ 游戏已结束，没有走法")
             return None
 
-        valid_moves = self.root.state.valid_moves
+        valid_moves = self.root.state._legal_moves
         if not valid_moves:
             return None
 
@@ -174,7 +174,7 @@ class MCTS:
         steps = 0
         max_sim_steps = min(max_steps, 30)  # 防死循环
         while sim_state.move_count < 26 and steps < max_sim_steps:
-            valid_moves = sim_state.valid_moves
+            valid_moves = sim_state._legal_moves
             if not valid_moves:
                 break
             move = random.choice(valid_moves)
@@ -196,7 +196,7 @@ class MCTS:
     def _get_best_move(self):
         if self.root is None or not self.root.children:
             # 无子节点时，随便返回一个合法走法
-            valid_moves = self.root.state.valid_moves
+            valid_moves = self.root.state._legal_moves
             return valid_moves[0] if valid_moves else None
 
         # 选胜率最高的孩子（若访问量为 0，胜率视为 0）

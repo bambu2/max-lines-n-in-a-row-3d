@@ -7,7 +7,8 @@ from src.algorithms import (
     get_move_minimax,
     get_move_mcts,
 )
-from src.utils import get_A_vs_B_stats, print_stats
+from src.stats import get_A_vs_B_stats
+from src.utils import print_stats
 
 
 class Order(Enum):
@@ -23,11 +24,11 @@ def get_total_games(ai1, ai2, order: Order) -> int:
         return 100
     elif order == Order.SAME_LEVEL:
         if ai1.__name__ == "get_move_random" and ai2.__name__ == "get_move_random":
-            return 0  # random vs random is fast, so increase the number of games
+            return 10  # random vs random is fast, so increase the number of games
         elif ai1.__name__ == "get_move_minimax" and ai2.__name__ == "get_move_minimax":
             return 0  # minimax vs minimax is slow, so reduce the number of games
         elif ai1.__name__ == "get_move_mcts" and ai2.__name__ == "get_move_mcts":
-            return 10  # mcts vs mcts is slow, so reduce the number of games
+            return 0  # mcts vs mcts is slow, so reduce the number of games
         return 0
     else:
         return 100

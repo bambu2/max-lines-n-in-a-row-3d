@@ -1,4 +1,4 @@
-from src.utils import GameState
+from src.game_state import GameState
 
 
 def get_move_greedy(state: GameState, player: int) -> int | None:
@@ -6,7 +6,7 @@ def get_move_greedy(state: GameState, player: int) -> int | None:
     best_score = -1
     best_move = None
 
-    for idx in state.valid_moves:
+    for idx in state._legal_moves:
         # 模拟落子
         board_copy = state.board.copy()
         board_copy[idx] = player
