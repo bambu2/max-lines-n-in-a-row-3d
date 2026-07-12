@@ -1,4 +1,4 @@
-from src.game_state import GameState
+from src.state_and_stat import GameState
 from src.utils import idx_to_xyz
 
 
@@ -7,7 +7,7 @@ def get_move_advanced(state: GameState, player: int) -> int | None:
     best_score = -999
     best_move = None
 
-    for idx in state._legal_moves:
+    for idx in state.legal_moves:
         # 进攻得分
         offense_score = 0
         for line in state.lines:
