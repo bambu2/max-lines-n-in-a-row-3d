@@ -3,10 +3,7 @@ def get_move_greedy(state, player) -> int | None:
     best_score = -1
     best_move = None
 
-    for idx in range(27):
-        if not state.is_valid_move(idx):
-            continue
-
+    for idx in state.valid_moves:
         # 模拟落子
         board_copy = state.board.copy()
         board_copy[idx] = player

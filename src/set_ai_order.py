@@ -23,12 +23,12 @@ def get_total_games(ai1, ai2, order: Order) -> int:
         return 100
     elif order == Order.SAME_LEVEL:
         if ai1.__name__ == "get_move_random" and ai2.__name__ == "get_move_random":
-            return 1000  # random vs random is fast, so increase the number of games
+            return 0  # random vs random is fast, so increase the number of games
         elif ai1.__name__ == "get_move_minimax" and ai2.__name__ == "get_move_minimax":
-            return 10  # minimax vs minimax is slow, so reduce the number of games
+            return 0  # minimax vs minimax is slow, so reduce the number of games
         elif ai1.__name__ == "get_move_mcts" and ai2.__name__ == "get_move_mcts":
             return 10  # mcts vs mcts is slow, so reduce the number of games
-        return 100
+        return 0
     else:
         return 100
 

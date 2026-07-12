@@ -5,12 +5,8 @@ def get_move_advanced(state, player) -> int | None:
     """使用评估函数，选择潜力最高的位置"""
     best_score = -999
     best_move = None
-    center_idx = 13
 
-    for idx in range(27):
-        if not state.is_valid_move(idx):
-            continue
-
+    for idx in state.valid_moves:
         # 进攻得分
         offense_score = 0
         for line in state.lines:
@@ -58,9 +54,7 @@ def get_move_advanced(state, player) -> int | None:
         # 位置加成
         position_bonus = 0
         layer, r, c = idx_to_xyz(idx)
-        if idx == center_idx:  # 中心（虽然不能用，但还是留着）
-            position_bonus = 0
-        elif layer in (0, 2) and r in (0, 2) and c in (0, 2):
+        if layer in (0, 2) and r in (0, 2) and c in (0, 2):
             position_bonus = 3  # 角格
         elif (
             (layer == 1 and r in (0, 2) and c in (0, 2))
@@ -68,6 +62,8 @@ def get_move_advanced(state, player) -> int | None:
             or (c == 1 and layer in (0, 2) and r in (0, 2))
         ):
             position_bonus = 2  # 边心格
+        else:
+            position_bonus = 0
 
         total_score = offense_score + defense_score + position_bonus
 

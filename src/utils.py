@@ -1,7 +1,7 @@
 import time
 
 
-class State:
+class GameState:
     """3x3x3 无中心块井字棋游戏状态"""
 
     def __init__(self):
@@ -10,9 +10,10 @@ class State:
         self.score_A = 0
         self.score_B = 0
         self.move_count = 0
-        self.center_idx = 13
+        self.banned_idx = 13
         self.current_player = 1
         self.move_history = []
+        self.valid_moves = [idx for idx in range(27) if idx != self.banned_idx]
 
     def _generate_all_lines_no_center(self):
         all_lines = self._generate_all_lines()
@@ -67,7 +68,7 @@ class State:
 
     def is_valid_move(self, idx) -> bool:
         """检查走法是否合法"""
-        if idx == self.center_idx:  # 中心不可用
+        if idx == self.banned_idx:  # 中心不可用
             return False
         if idx < 0 or idx >= 27:  # 索引范围
             return False
@@ -171,7 +172,7 @@ class State:
         return self.move_count >= 26 or all(pos != 0 for pos in self.board)
 
     def copy(self):
-        new_state = State()
+        new_state = GameState()
         new_state.board = self.board.copy()
         new_state.score_A = self.score_A
         new_state.score_B = self.score_B
@@ -228,7 +229,7 @@ class Stats:
         self.draw_rate = self.draws / self.total_games if self.total_games > 0 else 0.0
 
 
-def print_board(state: State):
+def print_board(state: GameState):
     symbols = {0: "·", 1: "X", -1: "O"}
 
     for layer in range(3):
@@ -237,7 +238,7 @@ def print_board(state: State):
             line = ""
             for col in range(3):
                 idx = xyz_to_idx(layer, row, col)
-                if idx == state.center_idx:
+                if idx == state.banned_idx:
                     line += " ✦ "  # 用特殊符号标记不可用中心
                 else:
                     line += f" {symbols[state.board[idx]]} "
@@ -296,7 +297,7 @@ def get_ai1_vs_ai2_stats(
         if verbose:
             print(f"第 {i + 1}/{total_games} 局")
 
-        state = State()
+        state = GameState()
         current_player = 1
         move_count = 0
 

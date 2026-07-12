@@ -1,17 +1,16 @@
 def get_move_minimax(state, player, depth=4) -> int | None:
     """Get best move using minimax with alpha-beta pruning."""
-    valid_moves = [idx for idx in range(27) if state.is_valid_move(idx)]
 
-    if not valid_moves:
+    if not state.valid_moves:
         return None
-    if len(valid_moves) == 1:
-        return valid_moves[0]
+    if len(state.valid_moves) == 1:
+        return state.valid_moves[0]
 
     best_score = -float("inf")
-    best_move = valid_moves[0]
+    best_move = state.valid_moves[0]
     is_maximizing = player == 1
 
-    for idx in valid_moves:
+    for idx in state.valid_moves:
         # ✅ Make move
         state.make_move(idx, player)
 
@@ -169,7 +168,7 @@ def calculate_sophisticated_bonus(state, player):
     """Calculate positional bonus using weighted importance"""
     bonus = 0
     for pos in range(27):
-        if pos == 13:  # Skip banned center
+        if pos == state.banned_idx:  # Skip banned center
             continue
         if state.board[pos] == player:
             bonus += get_position_importance(pos)
