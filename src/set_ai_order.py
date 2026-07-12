@@ -7,7 +7,7 @@ from src.algorithms import (
     get_move_minimax,
     get_move_mcts,
 )
-from src.utils import get_ai1_vs_ai2_stats, print_stats
+from src.utils import get_A_vs_B_stats, print_stats
 
 
 class Order(Enum):
@@ -67,5 +67,5 @@ def run(ai1, ai2, order, verbose=False):
     total_games = get_total_games(ai1, ai2, order)
     if total_games == 0:
         return
-    stats = get_ai1_vs_ai2_stats(ai1, ai2, total_games=total_games, verbose=verbose)
+    stats = get_A_vs_B_stats(ai1, ai2, total_games=total_games, verbose=verbose)
     print_stats(stats)

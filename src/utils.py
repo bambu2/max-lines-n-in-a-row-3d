@@ -1,8 +1,10 @@
 import time
 from dataclasses import dataclass
 
+from tqdm import tqdm
 
-@dataclass(slots=True)
+
+@dataclass()
 class GameState:
     board = [0] * 27  # 0=空, 1=玩家A, -1=玩家B
     score_A = 0
@@ -203,18 +205,18 @@ class GameState:
 
 @dataclass(slots=True)
 class Stats:
-    total_games = 0
-    wins_A = 0
-    wins_B = 0
-    draws = 0
+    total_games: int
+    wins_A: int = 0
+    wins_B: int = 0
+    draws: int = 0
     score_A_list = []
     score_B_list = []
-    avg_score_A = 0.0
-    avg_score_B = 0.0
-    avg_time = 0.0
-    win_rate_A = 0.0
-    win_rate_B = 0.0
-    draw_rate = 0.0
+    avg_score_A: float = 0.0
+    avg_score_B: float = 0.0
+    avg_time: float = 0.0
+    win_rate_A: float = 0.0
+    win_rate_B: float = 0.0
+    draw_rate: float = 0.0
     game_times = []
 
     def update(self, state, game_time):
@@ -284,19 +286,12 @@ def print_stats(stats) -> None:
     print(f"  总耗时:   {sum(stats.game_times):.2f}秒")
 
 
-def get_ai1_vs_ai2_stats(
-    ai1, ai2, total_games=100, verbose=False, max_moves=26
-) -> Stats:
-    """
-    运行两个AI对战（AI1先手，AI2后手）
-    """
+def get_A_vs_B_stats(A, B, total_games=100, verbose=False, max_moves=26) -> Stats:
+    stats = Stats(total_games)
 
-    stats = Stats()
-    stats.total_games = total_games
+    print(f"AI1: {A.__name__} vs AI2: {B.__name__}, 对局数: {total_games}")
 
-    print(f"AI1: {ai1.__name__} vs AI2: {ai2.__name__}, 对局数: {total_games}")
-
-    for i in range(total_games):
+    for i in tqdm(range(total_games)):
         if verbose:
             print(f"第 {i + 1}/{total_games} 局")
 
@@ -308,9 +303,9 @@ def get_ai1_vs_ai2_stats(
 
         while move_count < max_moves:
             if current_player == 1:
-                move = ai1(state, current_player)
+                move = A(state, current_player)
             else:
-                move = ai2(state, current_player)
+                move = B(state, current_player)
 
             if move is None:
                 break
