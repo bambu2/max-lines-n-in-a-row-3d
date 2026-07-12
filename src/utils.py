@@ -12,6 +12,7 @@ class State:
         self.move_count = 0
         self.center_idx = 13
         self.current_player = 1
+        self.move_history = []
 
     def _generate_all_lines_no_center(self):
         all_lines = self._generate_all_lines()
@@ -90,9 +91,20 @@ class State:
         Returns:
             bool: 是否成功
         """
+        if not self.is_valid_move(idx):
+            return False
+
+        undo_info = {
+            "idx": idx,
+            "previous_value": self.board[idx],
+            "score_A_before": self.score_A,
+            "score_B_before": self.score_B,
+            "player": player,
+        }
 
         self.board[idx] = player
         self.move_count += 1
+        self.move_history.append(undo_info)
 
         # ========== 检查新完成的线 ==========
         lines_completed = 0
@@ -118,17 +130,45 @@ class State:
 
         return True
 
-    def is_terminal(self) -> bool:
-        return self.move_count >= 26
+    def undo_move(self):
+        """
+        Undo the last move.
 
-    def get_score(self, player) -> int:
-        """获取指定玩家的得分"""
-        if player == 1:
-            return self.score_A
-        elif player == -1:
-            return self.score_B
-        else:
-            return 0
+        Returns:
+            bool: True if undo was successful, False if no moves to undo
+        """
+        if not self.move_history:
+            return False
+
+        # Pop the last undo info
+        undo_info = self.move_history.pop()
+
+        # Restore the board
+        self.board[undo_info["idx"]] = undo_info["previous_value"]
+
+        # Restore scores
+        self.score_A = undo_info["score_A_before"]
+        self.score_B = undo_info["score_B_before"]
+
+        # Decrement move count
+        self.move_count -= 1
+
+        return True
+
+    def undo_move_without_history(
+        self, idx, previous_value, score_A_before, score_B_before
+    ):
+        """
+        Alternative: Undo a specific move without using history.
+        Use this if you want to manually pass undo information.
+        """
+        self.board[idx] = previous_value
+        self.score_A = score_A_before
+        self.score_B = score_B_before
+        self.move_count -= 1
+
+    def is_terminal(self) -> bool:
+        return self.move_count >= 26 or all(pos != 0 for pos in self.board)
 
     def copy(self):
         new_state = State()
@@ -219,7 +259,7 @@ def rate_to_percentage(rate):
     return f"{rate * 100:.1f}%"
 
 
-def print_stats(stats, verbose=False) -> None:
+def print_stats(stats) -> None:
     print("🏆 胜负统计:")
     print(f"  玩家A胜: {stats.wins_A} ({rate_to_percentage(stats.win_rate_A)})")
     print(f"  玩家B胜: {stats.wins_B} ({rate_to_percentage(stats.win_rate_B)})")
@@ -236,20 +276,21 @@ def print_stats(stats, verbose=False) -> None:
     )
     print(f"  平均连线数差: {stats.avg_score_A - stats.avg_score_B:.2f}")
     print()
-    if verbose:
-        print("⏱️ 步数/时间:")
-        print(f"  平均每局耗时: {stats.avg_time:.4f}秒")
-        print(f"  总耗时:   {sum(stats.game_times):.2f}秒")
-        print()
+    print(f"  平均每局耗时: {stats.avg_time:.4f}秒")
+    print(f"  总耗时:   {sum(stats.game_times):.2f}秒")
 
 
-def run_ai1_vs_ai2(ai1, ai2, total_games=100, verbose=False, max_moves=26) -> Stats:
+def get_ai1_vs_ai2_stats(
+    ai1, ai2, total_games=100, verbose=False, max_moves=26
+) -> Stats:
     """
     运行两个AI对战（AI1先手，AI2后手）
     """
 
     stats = Stats()
     stats.total_games = total_games
+
+    print(f"AI1: {ai1.__name__} vs AI2: {ai2.__name__}, 对局数: {total_games}")
 
     for i in range(total_games):
         if verbose:

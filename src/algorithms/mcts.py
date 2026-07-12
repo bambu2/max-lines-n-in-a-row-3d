@@ -1,5 +1,6 @@
 import random
 import math
+import copy
 
 from src.utils import State
 
@@ -14,9 +15,7 @@ class MCTSNode:
         self.children = []
         self.wins = 0
         self.visits = 0
-        self.player_to_move = (
-            1 if state is None else -1
-        )  # 默认当前玩家为1，如果state存在则为-1
+        self.player_to_move = 1  # 默认当前玩家为1
         self.untried_moves = state.get_valid_moves() if state else []
 
     def is_fully_expanded(self):
@@ -204,7 +203,7 @@ class MCTS:
 
         if move is None:
             # 如果没有合法走法，更新 untried_moves
-            node.untried_moves = valid_moves.copy()  # 使用 copy 避免引用问题
+            node.untried_moves = valid_moves.copy()
             if not node.untried_moves:
                 return node
             move = node.untried_moves[0]
@@ -223,8 +222,8 @@ class MCTS:
                 print("❌ _expand: 复制状态失败")
                 return node
 
-            current_player = -self.current_player  # 切换玩家
-
+            # 计算当前玩家 - 使用 node.player_to_move 而不是 self.current_player
+            current_player = node.player_to_move
             success = new_state.make_move(move, current_player)
             if not success:
                 print(f"❌ _expand: 走法 {move} 执行失败")
@@ -271,6 +270,7 @@ class MCTS:
             return 0
 
         player = player_to_start
+
         # ========== 防御4：限制模拟步数 ==========
         try:
             max_steps = 26 - sim_state.move_count
@@ -346,7 +346,7 @@ class MCTS:
 
     def _copy_state(self, state):
         """
-        快速拷贝 GameState
+        拷贝 GameState
 
         Args:
             state: 原始 GameState
@@ -358,14 +358,23 @@ class MCTS:
         if state is None:
             return None
 
-        # ========== 浅拷贝 + 深拷贝列表 ==========
-        new_state = State()
-        new_state.board = state.board.copy()  # 列表拷贝
-        new_state.score_A = state.score_A
-        new_state.score_B = state.score_B
-        new_state.move_count = state.move_count
-        # lines 和 center_idx 是只读的，可以共享
-        return new_state
+        # ========== 使用深拷贝确保完全独立 ==========
+        try:
+            new_state = copy.deepcopy(state)
+            return new_state
+        except Exception as e:
+            print(f"⚠️ _copy_state: 深拷贝失败: {e}")
+            # 如果深拷贝失败，尝试手动拷贝
+            new_state = State()
+            if hasattr(state, "board"):
+                new_state.board = state.board.copy()
+            if hasattr(state, "score_A"):
+                new_state.score_A = state.score_A
+            if hasattr(state, "score_B"):
+                new_state.score_B = state.score_B
+            if hasattr(state, "move_count"):
+                new_state.move_count = state.move_count
+            return new_state
 
     def _get_winner(self, state):
         if state is None:

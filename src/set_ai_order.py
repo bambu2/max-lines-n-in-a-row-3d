@@ -7,7 +7,7 @@ from src.algorithms import (
     get_move_minimax,
     get_move_mcts,
 )
-from src.utils import run_ai1_vs_ai2, print_stats
+from src.utils import get_ai1_vs_ai2_stats, print_stats
 
 
 class Order(Enum):
@@ -16,13 +16,15 @@ class Order(Enum):
     SAME_LEVEL = 3
 
 
-def get_num_games(ai1, ai2, order: Order) -> int:
+def get_total_games(ai1, ai2, order: Order) -> int:
     if order == Order.WEAK_FIRST:
         return 100
     elif order == Order.STRONG_FIRST:
         return 100
     elif order == Order.SAME_LEVEL:
-        if ai1.__name__ == "get_move_minimax" and ai2.__name__ == "get_move_minimax":
+        if ai1.__name__ == "get_move_random" and ai2.__name__ == "get_move_random":
+            return 1000  # random vs random is fast, so increase the number of games
+        elif ai1.__name__ == "get_move_minimax" and ai2.__name__ == "get_move_minimax":
             return 10  # minimax vs minimax is slow, so reduce the number of games
         elif ai1.__name__ == "get_move_mcts" and ai2.__name__ == "get_move_mcts":
             return 10  # mcts vs mcts is slow, so reduce the number of games
@@ -62,9 +64,8 @@ def set_ai_order(order: Order, verbose=False):
 
 
 def run(ai1, ai2, order, verbose=False):
-    num_games = get_num_games(ai1, ai2, order)
-    if num_games == 0:
+    total_games = get_total_games(ai1, ai2, order)
+    if total_games == 0:
         return
-    stats = run_ai1_vs_ai2(ai1, ai2, total_games=num_games, verbose=verbose)
-    print(f"AI1: {ai1.__name__} vs AI2: {ai2.__name__}, 对局数: {num_games}")
-    print_stats(stats, verbose=verbose)
+    stats = get_ai1_vs_ai2_stats(ai1, ai2, total_games=total_games, verbose=verbose)
+    print_stats(stats)
