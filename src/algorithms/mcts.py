@@ -7,15 +7,7 @@ from src.utils import GameState
 class MCTSNode:
     """MCTS 节点（修复逻辑）"""
 
-    def __init__(self, state, parent=None, move=None, player_to_move=None):
-        """
-        Args:
-            state: 当前状态
-            parent: 父节点
-            move: 到达此节点的走法
-            player_to_move: 该节点轮到哪位玩家行棋（1 或 -1），
-                            根节点由外部设置，子节点由 parent 推算出。
-        """
+    def __init__(self, state: GameState, parent=None, move=None, player_to_move=None):
         self.state = state
         self.parent = parent
         self.move = move
@@ -23,9 +15,7 @@ class MCTSNode:
         self.wins = 0
         self.visits = 0
 
-        # ✅ 修正：根据 parent 确定 player_to_move
         if parent is not None:
-            # 父节点走了一步，轮到对手
             self.player_to_move = -parent.player_to_move
         else:
             # 根节点，由外部设置（MCTS 初始化时赋值）
@@ -42,7 +32,7 @@ class MCTSNode:
             return True
         return self.state.is_terminal()
 
-    def best_child(self, exploration_constant=1.41):
+    def best_child(self, exploration_constant=1.414):
         if not self.children:
             return None, -float("inf")
 
@@ -67,8 +57,6 @@ class MCTSNode:
 
 
 class MCTS:
-    """蒙特卡洛树搜索（修复逻辑）"""
-
     def __init__(self, state, iterations=500, exploration_constant=1.41):
         if state is None:
             raise ValueError("state 不能为 None")
@@ -90,11 +78,9 @@ class MCTS:
 
         valid_moves = self.root.state.get_valid_moves()
         if not valid_moves:
-            print("ℹ️ 没有合法走法")
             return None
 
         if len(valid_moves) == 1:
-            print(f"ℹ️ 只有一个合法走法: {valid_moves[0]}")
             return valid_moves[0]
 
         for iteration in range(self.iterations):

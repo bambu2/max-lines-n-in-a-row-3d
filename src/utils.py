@@ -68,16 +68,14 @@ class GameState:
 
     def is_valid_move(self, idx) -> bool:
         """检查走法是否合法"""
-        if idx == self.banned_idx:  # 中心不可用
+        if idx not in self.valid_moves:
             return False
-        if idx < 0 or idx >= 27:  # 索引范围
-            return False
-        return self.board[idx] == 0  # 空位
+        return self.board[idx] == 0
 
     def get_valid_moves(self) -> list:
         moves = []
         for idx in range(27):
-            if self.is_valid_move(idx):
+            if self.is_valid_move:
                 moves.append(idx)
         return moves
 

@@ -1,7 +1,7 @@
-from src.utils import idx_to_xyz
+from src.utils import idx_to_xyz, GameState
 
 
-def get_move_advanced(state, player) -> int | None:
+def get_move_advanced(state: GameState, player: int) -> int | None:
     """使用评估函数，选择潜力最高的位置"""
     best_score = -999
     best_move = None
