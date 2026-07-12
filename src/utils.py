@@ -1,18 +1,19 @@
 import time
+from dataclasses import dataclass
 
 
+@dataclass(slots=True)
 class GameState:
-    """3x3x3 无中心块井字棋游戏状态"""
+    board = [0] * 27  # 0=空, 1=玩家A, -1=玩家B
+    score_A = 0
+    score_B = 0
+    move_count = 0
+    current_player = 1
+    move_history = []
 
     def __init__(self):
-        self.board = [0] * 27  # 0=空, 1=玩家A, -1=玩家B
         self.lines = self._generate_all_lines_no_center()
-        self.score_A = 0
-        self.score_B = 0
-        self.move_count = 0
         self.banned_idx = 13
-        self.current_player = 1
-        self.move_history = []
         self.valid_moves = [idx for idx in range(27) if idx != self.banned_idx]
 
     def _generate_all_lines_no_center(self):
@@ -72,7 +73,12 @@ class GameState:
             return False
         return self.board[idx] == 0
 
-    def get_valid_moves(self) -> list:
+    @property
+    def valid_moves(self):
+        return self.valid_moves
+
+    @valid_moves.setter
+    def valid_moves(self) -> list:
         moves = []
         for idx in range(27):
             if self.is_valid_move:
@@ -180,21 +186,21 @@ class GameState:
         return new_state
 
 
+@dataclass(slots=True)
 class Stats:
-    def __init__(self):
-        self.total_games = 0
-        self.wins_A = 0
-        self.wins_B = 0
-        self.draws = 0
-        self.score_A_list = []
-        self.score_B_list = []
-        self.avg_score_A = 0.0
-        self.avg_score_B = 0.0
-        self.avg_time = 0.0
-        self.win_rate_A = 0.0
-        self.win_rate_B = 0.0
-        self.draw_rate = 0.0
-        self.game_times = []
+    total_games = 0
+    wins_A = 0
+    wins_B = 0
+    draws = 0
+    score_A_list = []
+    score_B_list = []
+    avg_score_A = 0.0
+    avg_score_B = 0.0
+    avg_time = 0.0
+    win_rate_A = 0.0
+    win_rate_B = 0.0
+    draw_rate = 0.0
+    game_times = []
 
     def update(self, state, game_time):
         self.score_A_list.append(state.score_A)
