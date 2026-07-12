@@ -1,7 +1,7 @@
 import random
 import math
 
-from src.utils import State
+from src.utils import GameState
 
 
 class MCTSNode:
@@ -359,7 +359,7 @@ class MCTS:
             return None
 
         # ========== 浅拷贝 + 深拷贝列表 ==========
-        new_state = State()
+        new_state = GameState()
         new_state.board = state.board.copy()  # 列表拷贝
         new_state.score_A = state.score_A
         new_state.score_B = state.score_B
