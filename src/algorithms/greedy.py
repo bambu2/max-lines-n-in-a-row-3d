@@ -1,17 +1,34 @@
+"""
+贪心策略模块。
+
+选择能立即形成最多线的位置，包含基本防守逻辑。
+"""
+
 from src.state_and_stat import GameState
 
 
 def get_move_greedy(state: GameState, player: int) -> int | None:
-    """选择能立即形成最多线的位置"""
+    """
+    贪心策略：选择能立即形成最多线的位置。
+
+    评分规则：
+    - 进攻得分：落子后能完成的线数 × 10
+    - 防守得分：能阻止对手成线的位置 × 5（对手已有两个子）
+
+    Args:
+        state: 当前游戏状态
+        player: 当前玩家（1或-1）
+
+    Returns:
+        int | None: 选中的位置索引，如果没有合法位置则返回None
+    """
     best_score = -1
     best_move = None
 
-    for idx in state.legal_moves:  # ✅ 修复: _legal_moves → legal_moves
-        # 模拟落子
+    for idx in state.legal_moves:
         board_copy = state.board.copy()
         board_copy[idx] = player
 
-        # 计算如果下这里，能完成几条线
         score = 0
         for line in state.lines:
             if idx not in line:
@@ -20,15 +37,13 @@ def get_move_greedy(state: GameState, player: int) -> int | None:
             if all(v == player for v in vals):
                 score += 1
 
-        # 防守：如果对手下一步能完成线，优先堵
         defense_score = 0
         for line in state.lines:
             if idx not in line:
                 continue
             vals = [state.board[i] for i in line]
-            # 如果对手已经有两个子，且第三个是空位
             if vals.count(-player) == 2 and vals.count(0) == 1:
-                defense_score += 5  # 高优先级防守
+                defense_score += 5
 
         total_score = score * 10 + defense_score
 

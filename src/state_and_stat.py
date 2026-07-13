@@ -1,3 +1,12 @@
+"""
+游戏状态和统计模块。
+
+包含：
+- GameState: 3x3x3 井字棋游戏状态管理（移除中心位置）
+- Stat: 对局统计数据类
+- get_stat: 运行多局对弈并收集统计信息
+"""
+
 import time
 from dataclasses import dataclass, field
 from tqdm import tqdm
@@ -5,26 +14,67 @@ from src.utils import xyz_to_idx, idx_to_xyz, rate_to_percentage
 
 
 class GameState:
+    """
+    3x3x3 井字棋游戏状态类（移除中心位置）。
+
+    棋盘结构：
+    - 3层 × 3行 × 3列 = 27个位置
+    - 中心位置 (1,1,1) 即索引 13 被禁止使用
+    - 实际可用位置：26个
+
+    玩家标记：
+    - 0: 空位
+    - 1: 先手玩家（玩家A）
+    - -1: 后手玩家（玩家B）
+
+    胜负判定：
+    - 完成一条线（3个连续同色棋子）得1分
+    - 线的类型：X轴方向、Y轴方向、Z轴方向、对角线、跨层对角线、体对角线
+    - 不含中心位置的线才有效
+    - 游戏结束时得分高者获胜，得分相同为平局
+    """
+
     def __init__(self):
+        """初始化游戏状态。"""
         self.board: list = [0] * 27  # 0=空, 1=玩家A, -1=玩家B
-        self.score_first_player: int = 0
-        self.score_second_player: int = 0
-        self.move_count: int = 0
-        self.current_player: int = 1
-        self.move_history: list = []
-        self.lines = self._select_lines()
-        self.banned_idx = 13
-        # Initialize legal moves excluding the banned center
+        self.score_first_player: int = 0  # 先手玩家得分
+        self.score_second_player: int = 0  # 后手玩家得分
+        self.move_count: int = 0  # 已落子数
+        self.current_player: int = 1  # 当前玩家（1或-1）
+        self.move_history: list = []  # 落子历史记录，用于 undo
+        self.lines = self._select_lines()  # 有效连线列表
+        self.banned_idx = 13  # 禁止使用的中心位置索引
         self._legal_moves = [idx for idx in range(27) if idx != self.banned_idx]
 
-    def is_legal_move(self, idx) -> bool:
+    def is_legal_move(self, idx: int) -> bool:
+        """
+        判断指定位置是否为合法落子位置。
+
+        Args:
+            idx: 位置索引（0-26）
+
+        Returns:
+            bool: True 表示合法（空位且非禁止位置），False 表示非法
+        """
         return (self.board[idx] == 0) and (idx in self._legal_moves)
 
     @property
-    def legal_moves(self) -> list:
+    def legal_moves(self) -> list[int]:
+        """
+        获取当前所有合法落子位置。
+
+        Returns:
+            list[int]: 合法位置索引列表
+        """
         return [idx for idx in self._legal_moves if self.board[idx] == 0]
 
-    def _select_lines(self):
+    def _select_lines(self) -> list[list[int]]:
+        """
+        筛选出所有不包含中心位置的有效连线。
+
+        Returns:
+            list[list[int]]: 有效连线列表，每条连线包含3个位置索引
+        """
         all_lines = self._generate_all_lines()
         selected_lines = []
 
@@ -35,30 +85,41 @@ class GameState:
 
         return selected_lines
 
-    def _generate_all_lines(self):
+    def _generate_all_lines(self) -> list[list[tuple[int, int, int]]]:
+        """
+        生成3x3x3棋盘中所有可能的连线。
+
+        包含6种类型的线：
+        1. X轴方向（每层每行）：9条
+        2. Y轴方向（每层每列）：9条
+        3. Z轴方向（跨层同一位置）：9条
+        4. 每层对角线（3层×2条）：6条
+        5. 跨层对角线（行方向+列方向）：12条
+        6. 体对角线：4条
+
+        总计：49条线
+
+        Returns:
+            list[list[tuple[int, int, int]]]: 所有连线的三维坐标列表
+        """
         lines = []
 
-        # 1. X轴方向 (每层每行)
         for layer in range(3):
             for r in range(3):
                 lines.append([(layer, r, 0), (layer, r, 1), (layer, r, 2)])
 
-        # 2. Y轴方向 (每层每列)
         for layer in range(3):
             for c in range(3):
                 lines.append([(layer, 0, c), (layer, 1, c), (layer, 2, c)])
 
-        # 3. Z轴方向 (跨层)
         for r in range(3):
             for c in range(3):
                 lines.append([(0, r, c), (1, r, c), (2, r, c)])
 
-        # 4. 每层对角线 (3层 × 2条)
         for layer in range(3):
             lines.append([(layer, 0, 0), (layer, 1, 1), (layer, 2, 2)])
             lines.append([(layer, 0, 2), (layer, 1, 1), (layer, 2, 0)])
 
-        # 5. 跨层对角线
         for r in range(3):
             lines.append([(0, r, 0), (1, r, 1), (2, r, 2)])
             lines.append([(0, r, 2), (1, r, 1), (2, r, 0)])
@@ -67,7 +128,6 @@ class GameState:
             lines.append([(0, 0, c), (1, 1, c), (2, 2, c)])
             lines.append([(0, 2, c), (1, 1, c), (2, 0, c)])
 
-        # 6. 体对角线 (4条)
         lines.append([(0, 0, 0), (1, 1, 1), (2, 2, 2)])
         lines.append([(0, 0, 2), (1, 1, 1), (2, 2, 0)])
         lines.append([(0, 2, 0), (1, 1, 1), (2, 0, 2)])
@@ -128,38 +188,42 @@ class GameState:
 
     def undo_move(self) -> bool:
         """
-        Undo the last move.
+        撤销最后一步落子。
+
+        从 move_history 中恢复之前的状态。
 
         Returns:
-            bool: True if undo was successful, False if no moves to undo
+            bool: True 表示撤销成功，False 表示无可撤销的落子
         """
         if not self.move_history:
             return False
 
-        # Pop the last undo info
         undo_info = self.move_history.pop()
-
-        # Restore the board
         self.board[undo_info["idx"]] = undo_info["previous_value"]
-
-        # Restore scores
         self.score_first_player = undo_info["score_first_player_before"]
         self.score_second_player = undo_info["score_second_player_before"]
-
-        # Restore current player
         self.current_player = undo_info["current_player_before"]
-
-        # Decrement move count
         self.move_count -= 1
 
         return True
 
     def undo_move_without_history(
-        self, idx, previous_value, score_first_player_before, score_second_player_before
-    ):
+        self,
+        idx: int,
+        previous_value: int,
+        score_first_player_before: int,
+        score_second_player_before: int,
+    ) -> None:
         """
-        Alternative: Undo a specific move without using history.
-        Use this if you want to manually pass undo information.
+        手动撤销指定位置的落子，不使用历史记录。
+
+        适用于 minimax 等算法中的临时落子撤销。
+
+        Args:
+            idx: 落子位置索引
+            previous_value: 该位置之前的值（通常为0）
+            score_first_player_before: 先手玩家之前的得分
+            score_second_player_before: 后手玩家之前的得分
         """
         self.board[idx] = previous_value
         self.score_first_player = score_first_player_before
@@ -167,22 +231,45 @@ class GameState:
         self.move_count -= 1
 
     def is_terminal(self) -> bool:
-        """Check if the game is in a terminal state."""
-        # Game ends when all 26 available positions (excluding center) are filled
-        # or when no legal moves remain
+        """
+        判断游戏是否结束。
+
+        游戏结束条件：
+        - 所有26个可用位置都已落子
+        - 没有合法落子位置
+
+        Returns:
+            bool: True 表示游戏结束，False 表示游戏继续
+        """
         return self.move_count >= 26 or len(self.legal_moves) == 0
 
-    def copy(self):
+    def copy(self) -> "GameState":
+        """
+        创建游戏状态的副本。
+
+        深拷贝 board，浅拷贝只读属性（lines 和 banned_idx）。
+
+        Returns:
+            GameState: 游戏状态副本
+        """
         new_state = GameState()
         new_state.board = self.board.copy()
         new_state.score_first_player = self.score_first_player
         new_state.score_second_player = self.score_second_player
         new_state.move_count = self.move_count
         new_state.current_player = self.current_player
-        # lines 和 center_idx 是只读的，可以共享
         return new_state
 
-    def print_board(self):
+    def print_board(self) -> None:
+        """
+        打印当前棋盘状态。
+
+        使用符号表示：
+        - ·: 空位
+        - X: 玩家1（先手）
+        - O: 玩家-1（后手）
+        - ✦: 禁止使用的中心位置
+        """
         symbols = {0: "·", 1: "X", -1: "O"}
 
         for layer in range(3):
@@ -192,7 +279,7 @@ class GameState:
                 for col in range(3):
                     idx = xyz_to_idx(layer, row, col)
                     if idx == self.banned_idx:
-                        line += " ✦ "  # 用特殊符号标记不可用中心
+                        line += " ✦ "
                     else:
                         line += f" {symbols[self.board[idx]]} "
                 print(line)
@@ -200,21 +287,49 @@ class GameState:
 
 @dataclass(slots=True)
 class Stat:
+    """
+    对局统计数据类。
+
+    记录多局对弈的统计信息，包括胜负次数、得分、耗时等。
+
+    Attributes:
+        total_games: 总对局数
+        wins_first_player: 先手玩家获胜次数
+        wins_second_player: 后手玩家获胜次数
+        draws: 平局次数
+        scores_first_player: 每局先手玩家得分列表
+        scores_second_player: 每局后手玩家得分列表
+        avg_score_first_player: 先手玩家平均得分
+        avg_score_second_player: 后手玩家平均得分
+        avg_time: 平均每局耗时（秒）
+        win_rate_first_player: 先手玩家胜率（0-1）
+        win_rate_second_player: 后手玩家胜率（0-1）
+        draw_rate: 平局率（0-1）
+        total_time: 每局耗时列表（秒）
+    """
+
     total_games: int
     wins_first_player: int = 0
     wins_second_player: int = 0
     draws: int = 0
-    scores_first_player: list = field(default_factory=list)
-    scores_second_player: list = field(default_factory=list)
+    scores_first_player: list[int] = field(default_factory=list)
+    scores_second_player: list[int] = field(default_factory=list)
     avg_score_first_player: float = 0.0
     avg_score_second_player: float = 0.0
     avg_time: float = 0.0
     win_rate_first_player: float = 0.0
     win_rate_second_player: float = 0.0
     draw_rate: float = 0.0
-    total_time: list = field(default_factory=list)
+    total_time: list[float] = field(default_factory=list)
 
-    def update(self, state, game_time):
+    def update(self, state: GameState, game_time: float) -> None:
+        """
+        更新单局游戏的统计数据。
+
+        Args:
+            state: 游戏结束时的状态
+            game_time: 本局耗时（秒）
+        """
         self.scores_first_player.append(state.score_first_player)
         self.scores_second_player.append(state.score_second_player)
         self.total_time.append(game_time)
@@ -226,29 +341,24 @@ class Stat:
         else:
             self.draws += 1
 
-    def result_update(self):
-        self.avg_score_first_player = (
-            sum(self.scores_first_player) / self.total_games
-            if self.total_games > 0
-            else 0.0
-        )
-        self.avg_score_second_player = (
-            sum(self.scores_second_player) / self.total_games
-            if self.total_games > 0
-            else 0.0
-        )
-        self.avg_time = (
-            sum(self.total_time) / self.total_games if self.total_games > 0 else 0.0
-        )
-        self.win_rate_first_player = (
-            self.wins_first_player / self.total_games if self.total_games > 0 else 0.0
-        )
-        self.win_rate_second_player = (
-            self.wins_second_player / self.total_games if self.total_games > 0 else 0.0
-        )
-        self.draw_rate = self.draws / self.total_games if self.total_games > 0 else 0.0
+    def result_update(self) -> None:
+        """
+        计算并更新统计结果（胜率、平均得分、平均耗时）。
 
-    def print_stats(self):
+        基于已收集的原始数据计算派生统计值。
+        """
+        if self.total_games <= 0:
+            return
+
+        self.avg_score_first_player = sum(self.scores_first_player) / self.total_games
+        self.avg_score_second_player = sum(self.scores_second_player) / self.total_games
+        self.avg_time = sum(self.total_time) / self.total_games
+        self.win_rate_first_player = self.wins_first_player / self.total_games
+        self.win_rate_second_player = self.wins_second_player / self.total_games
+        self.draw_rate = self.draws / self.total_games
+
+    def print_stats(self) -> None:
+        """打印统计结果到控制台。"""
         print("🏆 胜负统计:")
         print(
             f"  先手胜: {self.wins_first_player} ({rate_to_percentage(self.win_rate_first_player)})"
@@ -276,8 +386,25 @@ class Stat:
 
 
 def get_stat(
-    first_player, second_player, total_games: int, verbose=False, max_moves=26
+    first_player,
+    second_player,
+    total_games: int,
+    verbose: bool = False,
+    max_moves: int = 26,
 ) -> Stat:
+    """
+    运行多局对弈并收集统计信息。
+
+    Args:
+        first_player: 先手玩家的策略函数，签名为 (state, player) -> int | None
+        second_player: 后手玩家的策略函数，签名为 (state, player) -> int | None
+        total_games: 总对局数
+        verbose: 是否打印每局详细信息（默认 False）
+        max_moves: 最大步数限制（默认 26，即所有可用位置）
+
+    Returns:
+        Stat: 统计结果对象
+    """
     stat = Stat(total_games)
 
     print(
@@ -303,7 +430,7 @@ def get_stat(
                 break
 
             state.make_move(move, current_player)
-            current_player = -current_player  # Switch player
+            current_player = -current_player
 
             if verbose:
                 print(f"第 {state.move_count} 步: {idx_to_xyz(move)}")
