@@ -12,7 +12,7 @@ wheels = [
 ]
 
 [[package]]
-name = "tic-tac-toe-3x3x3-without-the-center-cell"
+name = "hollow-cube-tic-tac-toe"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
