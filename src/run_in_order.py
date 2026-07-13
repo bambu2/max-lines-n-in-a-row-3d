@@ -37,7 +37,7 @@ def get_total_games(first_player, second_player, order: Order) -> int:
             and second_player.__name__ == "get_move_mcts"
         ):
             return 10  # mcts vs mcts is slow, so reduce the number of games
-        return 100
+        return 0
     else:
         return 100
 
