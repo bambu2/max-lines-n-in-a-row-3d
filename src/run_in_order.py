@@ -73,7 +73,7 @@ def get_total_games(
             first_player.__name__ == "get_move_random"
             and second_player.__name__ == "get_move_random"
         ):
-            return 10000
+            return 50000
         elif (
             first_player.__name__ == "get_move_minimax"
             and second_player.__name__ == "get_move_minimax"
