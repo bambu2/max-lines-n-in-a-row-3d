@@ -26,28 +26,30 @@
 
 ## 项目结构
 
+``` text
 tic-tac-toe-3x3x3-without-the-center-cell/
 ├── .python-version          # Python 版本配置
 ├── main.py                  # 程序入口
 ├── pyproject.toml           # 项目配置
 ├── uv.lock                  # 依赖锁文件
 ├── README.md                # 项目文档
-├── model/                   # 模型文件（Blender）
+├── assets/                   # 模型文件（Blender）
 │   ├── advanced.blend
 │   ├── greedy.blend
 │   └── minimax.blend
 └── src/                     # 源代码目录
-    ├── **init**.py
     ├── state_and_stat.py    # 游戏状态和统计模块
     ├── run_in_order.py      # 对弈顺序控制模块
     ├── utils.py             # 工具函数
+    ├── __init__.py
     └── algorithms/          # AI算法模块
-        ├── **init**.py
         ├── random.py        # 随机策略
         ├── greedy.py        # 贪心策略
         ├── advanced.py      # 高级启发式策略
         ├── minimax.py       # 极小极大策略（带alpha-beta剪枝）
         └── mcts.py          # 蒙特卡洛树搜索策略
+        ├── __init__.py
+```
 
 ## AI 算法
 
