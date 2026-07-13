@@ -7,7 +7,7 @@ from src.algorithms import (
     get_move_minimax,
     get_move_mcts,
 )
-from src.state_and_stat import get_stats
+from src.state_and_stat import get_stat
 
 
 class Order(Enum):
@@ -42,8 +42,8 @@ def get_total_games(first_player, second_player, order: Order) -> int:
         return 100
 
 
-def set_ai_order(order: Order, verbose=False):
-    ai_func_list = [
+def run_in_order(order: Order, verbose=False):
+    fn_list = [
         get_move_random,
         get_move_greedy,
         get_move_advanced,
@@ -52,29 +52,31 @@ def set_ai_order(order: Order, verbose=False):
     ]
     try:
         if order == Order.WEAK_FIRST:
-            for i in range(len(ai_func_list)):
-                for j in range(i + 1, len(ai_func_list)):
-                    ai1 = ai_func_list[i]
-                    ai2 = ai_func_list[j]
-                    run(ai1, ai2, order, verbose=verbose)
+            for i in range(len(fn_list)):
+                for j in range(i + 1, len(fn_list)):
+                    first_player = fn_list[i]
+                    second_player = fn_list[j]
+                    run(first_player, second_player, order, verbose=verbose)
         elif order == Order.STRONG_FIRST:
-            for i in range(len(ai_func_list)):
-                for j in range(i + 1, len(ai_func_list)):
-                    ai1 = ai_func_list[j]
-                    ai2 = ai_func_list[i]
-                    run(ai1, ai2, order, verbose=verbose)
+            for i in range(len(fn_list)):
+                for j in range(i + 1, len(fn_list)):
+                    first_player = fn_list[j]
+                    second_player = fn_list[i]
+                    run(first_player, second_player, order, verbose=verbose)
         elif order == Order.SAME_LEVEL:
-            for i in range(len(ai_func_list)):
-                ai1 = ai_func_list[i]
-                ai2 = ai_func_list[i]
-                run(ai1, ai2, order, verbose=verbose)
+            for i in range(len(fn_list)):
+                first_player = fn_list[i]
+                second_player = fn_list[i]
+                run(first_player, second_player, order, verbose=verbose)
     except Exception as e:
         print(f"An error occurred: {e}")
 
 
-def run(ai1, ai2, order, verbose=False):
-    total_games = get_total_games(ai1, ai2, order)
+def run(first_player, second_player, order: Order, verbose=False):
+    total_games = get_total_games(first_player, second_player, order)
     if total_games == 0:
         return
-    stats = get_stats(ai1, ai2, total_games=total_games, verbose=verbose)
+    stats = get_stat(
+        first_player, second_player, total_games=total_games, verbose=verbose
+    )
     stats.print_stats()

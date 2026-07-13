@@ -7,7 +7,7 @@ def get_move_advanced(state: GameState, player: int) -> int | None:
     best_score = -999
     best_move = None
 
-    for idx in state._legal_moves:
+    for idx in state.legal_moves:  # ✅ 修复: _legal_moves → legal_moves
         # 进攻得分
         offense_score = 0
         for line in state.lines:

@@ -1,7 +1,7 @@
 from src.state_and_stat import GameState
 
 
-def get_move_minimax(state: GameState, player, depth=4) -> int | None:
+def get_move_minimax(state: GameState, player: int, depth: int = 4) -> int | None:
     """Get best move using minimax with alpha-beta pruning."""
 
     if not state.legal_moves:
@@ -9,141 +9,97 @@ def get_move_minimax(state: GameState, player, depth=4) -> int | None:
     if len(state.legal_moves) == 1:
         return state.legal_moves[0]
 
-    best_score = -float("inf")
-    best_move = state.legal_moves[0]
+    # ✅ 修复: 始终从玩家1视角评估，玩家1最大化，玩家-1最小化
     is_maximizing = player == 1
 
+    if is_maximizing:
+        best_score = -float("inf")
+    else:
+        best_score = float("inf")
+
+    best_move = state.legal_moves[0]
+
     for idx in state.legal_moves:
-        # ✅ Make move
         state.make_move(idx, player)
 
-        # After making the move, it's the OPPONENT's turn
         score = minimax(
             state, depth - 1, -float("inf"), float("inf"), not is_maximizing
         )
 
-        # ✅ Undo move
         state.undo_move()
 
-        if score > best_score:
-            best_score = score
-            best_move = idx
+        # ✅ 修复: 玩家1选最大值，玩家-1选最小值
+        if is_maximizing:
+            if score > best_score:
+                best_score = score
+                best_move = idx
+        else:
+            if score < best_score:
+                best_score = score
+                best_move = idx
 
     return best_move
 
 
-def minimax(state, depth, alpha, beta, is_maximizing) -> float:
-    """Minimax with alpha-beta pruning using undo."""
-    current_player = 1 if is_maximizing else -1
+def minimax(state: GameState, depth: int, alpha, beta, is_maximizing) -> float:
+    """Minimax with alpha-beta pruning using undo.
 
+    ✅ 评估值始终从玩家1的视角返回：
+       - 玩家1的回合 (is_maximizing=True)  → 最大化
+       - 玩家-1的回合 (is_maximizing=False) → 最小化
+    """
     if state.is_terminal() or depth == 0:
-        return evaluate_board(state, current_player)
+        return evaluate_board(state)
 
-    legal_moves = [idx for idx in range(27) if state.is_valid_move(idx)]
+    legal_moves = state.legal_moves
     if not legal_moves:
-        return evaluate_board(state, current_player)
+        return evaluate_board(state)
 
     if is_maximizing:
         max_eval = -float("inf")
         for idx in legal_moves:
-            # ✅ Make move
             state.make_move(idx, 1)
-
-            # Recursively evaluate
-            eval = minimax(state, depth - 1, alpha, beta, False)
-
-            # ✅ Undo move (NO COPYING!)
+            eval_score = minimax(state, depth - 1, alpha, beta, False)
             state.undo_move()
 
-            max_eval = max(max_eval, eval)
-            alpha = max(alpha, eval)
+            max_eval = max(max_eval, eval_score)
+            alpha = max(alpha, eval_score)
             if beta <= alpha:
                 break
         return max_eval
-
     else:
         min_eval = float("inf")
         for idx in legal_moves:
-            # ✅ Make move
             state.make_move(idx, -1)
-
-            # Recursively evaluate
-            eval = minimax(state, depth - 1, alpha, beta, True)
-
-            # ✅ Undo move (NO COPYING!)
+            eval_score = minimax(state, depth - 1, alpha, beta, True)
             state.undo_move()
 
-            min_eval = min(min_eval, eval)
-            beta = min(beta, eval)
+            min_eval = min(min_eval, eval_score)
+            beta = min(beta, eval_score)
             if beta <= alpha:
                 break
         return min_eval
 
 
-def evaluate_board(state, current_player):
+# ✅ 修复: 始终从玩家1的固定视角评估，不再随 current_player 翻转
+def evaluate_board(state: GameState) -> float:
     if state.is_terminal():
-        # Who actually has more points?
         if state.score_first_player > state.score_second_player:
-            # Player 1 wins
-            return 10000 if current_player == 1 else -10000
+            return 10000  # 玩家1赢
         elif state.score_second_player > state.score_first_player:
-            # Player -1 wins
-            return 10000 if current_player == -1 else -10000
+            return -10000  # 玩家-1赢
         else:
-            return 0
+            return 0  # 平局
 
-    # Mid-game evaluation from current_player's perspective
-    if current_player == 1:
-        score_diff = state.score_first_player - state.score_second_player
-    else:
-        score_diff = state.score_second_player - state.score_first_player
+    # 始终从玩家1视角: 正数有利于玩家1，负数有利于玩家-1
+    score_diff = state.score_first_player - state.score_second_player
 
-    # Add positional bonuses for strategic play
-    positional_bonus = calculate_sophisticated_bonus(state, current_player)
+    positional_bonus = calculate_sophisticated_bonus(state, 1)
 
-    # Consider mobility (number of available moves)
-    mobility_bonus = calculate_mobility_bonus(state, current_player)
+    # ✅ 修复: 移除失效的 calculate_mobility_bonus
+    # 棋盘是共享的，双方合法走法相同，mobility 差值始终为 0，无意义
 
-    # Combine score difference with positional bonus
-    return score_diff * 10 + positional_bonus + mobility_bonus
-
-
-def calculate_mobility_bonus(state, player):
-    """Bonus for having more available moves than opponent"""
-    # Count moves for current player
-    my_moves = 0
-    opponent_moves = 0
-
-    # Save current state
-    board_backup = state.board.copy()
-    score_second_playerackup = (state.score_first_player, state.score_second_player)
-    move_count_backup = state.move_count
-
-    # Count current player's moves
-    for pos in range(27):
-        if state.board[pos] == 0:
-            # Try the move
-            temp_state = state  # In real code, copy state properly
-            temp_state.board[pos] = player
-            if temp_state.is_valid_move(pos):  # Need actual validation
-                my_moves += 1
-            temp_state.board[pos] = 0
-
-    # Count opponent's moves
-    for pos in range(27):
-        if state.board[pos] == 0:
-            temp_state = state
-            temp_state.board[pos] = -player
-            if temp_state.is_valid_move(pos):
-                opponent_moves += 1
-            temp_state.board[pos] = 0
-
-    # Restore state
-    state.board = board_backup
-    state.score_first_player, state.score_second_player = score_second_playerackup
-    state.move_count = move_count_backup
-
-    return (my_moves - opponent_moves) * 0.5
+    return score_diff * 10 + positional_bonus
 
 
 def get_position_importance(pos):
@@ -167,11 +123,13 @@ def get_position_importance(pos):
     return 0
 
 
-def calculate_sophisticated_bonus(state, player):
-    """Calculate positional bonus using weighted importance"""
+def calculate_sophisticated_bonus(state: GameState, player: int):
+    """Calculate positional bonus using weighted importance.
+    ✅ 从玩家1视角: player=1 的棋子加分，player=-1 的棋子减分
+    """
     bonus = 0
     for pos in range(27):
-        if pos == state.banned_idx:  # Skip banned center
+        if pos == state.banned_idx:
             continue
         if state.board[pos] == player:
             bonus += get_position_importance(pos)

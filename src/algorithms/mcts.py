@@ -5,7 +5,7 @@ from src.state_and_stat import GameState
 
 
 class MCTSNode:
-    """MCTS 节点（修复逻辑）"""
+    """MCTS 节点"""
 
     def __init__(self, state: GameState, parent=None, move=None, player_to_move=None):
         self.state = state
@@ -18,11 +18,10 @@ class MCTSNode:
         if parent is not None:
             self.player_to_move = -parent.player_to_move
         else:
-            # 根节点，由外部设置（MCTS 初始化时赋值）
             self.player_to_move = player_to_move
 
-        # 初始化未尝试走法
-        self.untried_moves = state._legal_moves if state else []
+        # ✅ 修复: _legal_moves → legal_moves，只包含空位
+        self.untried_moves = list(state.legal_moves) if state else []
 
     def is_fully_expanded(self):
         return len(self.untried_moves) == 0
@@ -61,11 +60,10 @@ class MCTS:
         if state is None:
             raise ValueError("state 不能为 None")
 
-        # ✅ 根节点先创建，player_to_move 初始为 None，后续由外部设置
         self.root = MCTSNode(state, player_to_move=None)
         self.iterations = max(1, iterations)
         self.exploration_constant = exploration_constant
-        self.current_player = 1  # 占位，后续会由 get_move_mcts 赋值
+        self.current_player = 1
 
     def search(self):
         if self.root is None:
@@ -76,7 +74,7 @@ class MCTS:
             print("ℹ️ 游戏已结束，没有走法")
             return None
 
-        valid_moves = self.root.state._legal_moves
+        valid_moves = self.root.state.legal_moves  # ✅ 修复: _legal_moves → legal_moves
         if not valid_moves:
             return None
 
@@ -128,32 +126,35 @@ class MCTS:
         if node.is_terminal():
             return node
 
-        # ✅ 确保有未尝试的走法
+        # ✅ 修复: 若未尝试走法为空，从 legal_moves 重新同步
         if not node.untried_moves:
-            # 若意外为空则重新同步合法走法（防御性编程）
-            node.untried_moves = node.state.get_valid_moves
+            node.untried_moves = [
+                idx
+                for idx in node.state.legal_moves
+                if not any(c.move == idx for c in node.children)
+            ]
             if not node.untried_moves:
                 return node
 
         # 选择一个未尝试的走法
-        move = node.untried_moves.pop(0)  # 用 pop 保证移除
-        # 确认走法仍合法（避免状态被外部修改）
-        if move not in node.state.get_valid_moves:
-            return node  # 该走法已非法，返回节点下次再尝试其他
+        move = node.untried_moves.pop(0)
 
-        # ✅ 创建子状态，使用当前节点的玩家来执行走法
+        # ✅ 修复: 确认走法仍合法
+        if not node.state.is_legal_move(move):
+            return node
+
+        # 创建子状态
         new_state = self._copy_state(node.state)
         if new_state is None:
             return node
 
-        # ✅ 核心修正：使用 node.player_to_move 执行走法
+        # 使用 node.player_to_move 执行走法
         current_player = node.player_to_move
         success = new_state.make_move(move, current_player)
         if not success:
             print(f"❌ 走法 {move} 执行失败")
             return node
 
-        # ✅ 创建子节点，子节点的 player_to_move 会在构造函数中自动设为 -current_player
         child_node = MCTSNode(new_state, parent=node, move=move)
         node.children.append(child_node)
         return child_node
@@ -167,14 +168,15 @@ class MCTS:
             return 0
 
         player = player_to_start
-        max_steps = 26 - sim_state.move_count  # 最多总步数 26
+        max_steps = 26 - sim_state.move_count
         if max_steps <= 0:
             return self._get_winner(sim_state)
 
         steps = 0
-        max_sim_steps = min(max_steps, 30)  # 防死循环
+        max_sim_steps = min(max_steps, 30)
         while sim_state.move_count < 26 and steps < max_sim_steps:
-            valid_moves = sim_state._legal_moves
+            # ✅ 修复: _legal_moves → legal_moves，只选空位
+            valid_moves = sim_state.legal_moves
             if not valid_moves:
                 break
             move = random.choice(valid_moves)
@@ -185,21 +187,25 @@ class MCTS:
         return self._get_winner(sim_state)
 
     def _backpropagate(self, node, winner):
+        """✅ 修复: wins 记录「刚落子到达该节点的玩家」的胜场。
+        节点的 player_to_move 是即将行动的玩家，
+        那么刚落子的是 -player_to_move。
+        best_child 选胜率最高的子节点 → 对父节点玩家最有利。
+        """
         current = node
         while current is not None:
             current.visits += 1
-            # ✅ 修正：节点视角是“轮到 player_to_move 行动”，若胜者正是该玩家则加胜场
-            if winner == current.player_to_move:
+            # 胜者是「刚落子到达该节点」的玩家（= -player_to_move）
+            if winner == -current.player_to_move:
                 current.wins += 1
             current = current.parent
 
     def _get_best_move(self):
         if self.root is None or not self.root.children:
-            # 无子节点时，随便返回一个合法走法
-            valid_moves = self.root.state._legal_moves
+            valid_moves = self.root.state.legal_moves  # ✅ 修复
             return valid_moves[0] if valid_moves else None
 
-        # 选胜率最高的孩子（若访问量为 0，胜率视为 0）
+        # 选胜率最高的孩子
         best_child = max(
             self.root.children, key=lambda c: c.wins / c.visits if c.visits > 0 else 0
         )
@@ -214,7 +220,6 @@ class MCTS:
         new_state.score_first_player = state.score_first_player
         new_state.score_second_player = state.score_second_player
         new_state.move_count = state.move_count
-        # lines 和 center_idx 为只读，共享即可
         return new_state
 
     def _get_winner(self, state):
@@ -232,20 +237,13 @@ class MCTS:
 
 
 def get_move_mcts(state, player, iterations=500):
-    """
-    MCTS AI 主函数
-    Args:
-        state: 当前局面
-        player: 当前行棋玩家 (1 或 -1)
-        iterations: 搜索迭代次数
-    Returns:
-        最佳走法索引，若无则返回 None
-    """
+    """MCTS AI 主函数"""
     if state is None:
         print("❌ 错误：state 为 None")
         return None
 
-    valid_moves = state.get_valid_moves
+    # ✅ 修复: get_valid_moves → legal_moves
+    valid_moves = state.legal_moves
     if not valid_moves:
         print("ℹ️ 没有合法走法")
         return None
@@ -254,9 +252,8 @@ def get_move_mcts(state, player, iterations=500):
 
     try:
         mcts = MCTS(state, iterations=iterations)
-        # ✅ 将 AI 当前玩家设置到根节点
         mcts.current_player = player
-        mcts.root.player_to_move = player  # 根节点轮到 AI 行棋
+        mcts.root.player_to_move = player
         best_move = mcts.search()
 
         if best_move is None:

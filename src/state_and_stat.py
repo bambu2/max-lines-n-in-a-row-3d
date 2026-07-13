@@ -1,5 +1,5 @@
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from tqdm import tqdm
 from src.utils import xyz_to_idx, idx_to_xyz, rate_to_percentage
 
@@ -14,25 +14,22 @@ class GameState:
         self.move_history: list = []
         self.lines = self._select_lines()
         self.banned_idx = 13
-        self._legal_moves = [idx for idx in range(27)]
+        # Initialize legal moves excluding the banned center
+        self._legal_moves = [idx for idx in range(27) if idx != self.banned_idx]
 
     def is_legal_move(self, idx) -> bool:
         return (self.board[idx] == 0) and (idx in self._legal_moves)
 
     @property
     def legal_moves(self) -> list:
-        moves = []
-        for idx in self._legal_moves:
-            if self.is_legal_move:
-                moves.append(idx)
-        return moves
+        return [idx for idx in self._legal_moves if self.board[idx] == 0]
 
     def _select_lines(self):
         all_lines = self._generate_all_lines()
         selected_lines = []
 
         for line in all_lines:
-            if (1, 1, 1) not in line:  # 排除经过中心的线
+            if (1, 1, 1) not in line:
                 idx_line = [xyz_to_idx(*coord) for coord in line]
                 selected_lines.append(idx_line)
 
@@ -98,6 +95,7 @@ class GameState:
             "score_first_player_before": self.score_first_player,
             "score_second_player_before": self.score_second_player,
             "player": player,
+            "current_player_before": self.current_player,
         }
 
         self.board[idx] = player
@@ -148,6 +146,9 @@ class GameState:
         self.score_first_player = undo_info["score_first_player_before"]
         self.score_second_player = undo_info["score_second_player_before"]
 
+        # Restore current player
+        self.current_player = undo_info["current_player_before"]
+
         # Decrement move count
         self.move_count -= 1
 
@@ -166,7 +167,10 @@ class GameState:
         self.move_count -= 1
 
     def is_terminal(self) -> bool:
-        return self.move_count >= 26 or all(pos != 0 for pos in self.board)
+        """Check if the game is in a terminal state."""
+        # Game ends when all 26 available positions (excluding center) are filled
+        # or when no legal moves remain
+        return self.move_count >= 26 or len(self.legal_moves) == 0
 
     def copy(self):
         new_state = GameState()
@@ -195,20 +199,20 @@ class GameState:
 
 
 @dataclass(slots=True)
-class Stats:
+class Stat:
     total_games: int
     wins_first_player: int = 0
     wins_second_player: int = 0
     draws: int = 0
-    scores_first_player = []
-    scores_second_player = []
+    scores_first_player: list = field(default_factory=list)
+    scores_second_player: list = field(default_factory=list)
     avg_score_first_player: float = 0.0
     avg_score_second_player: float = 0.0
     avg_time: float = 0.0
     win_rate_first_player: float = 0.0
     win_rate_second_player: float = 0.0
     draw_rate: float = 0.0
-    total_time = []
+    total_time: list = field(default_factory=list)
 
     def update(self, state, game_time):
         self.scores_first_player.append(state.score_first_player)
@@ -271,10 +275,10 @@ class Stats:
         print(f"  总耗时:   {sum(self.total_time):.2f}秒")
 
 
-def get_stats(
-    first_player, second_player, total_games=100, verbose=False, max_moves=26
-) -> Stats:
-    stats = Stats(total_games)
+def get_stat(
+    first_player, second_player, total_games: int, verbose=False, max_moves=26
+) -> Stat:
+    stat = Stat(total_games)
 
     print(
         f"先手: {first_player.__name__} vs 后手: {second_player.__name__}, 对局数: {total_games}"
@@ -286,11 +290,10 @@ def get_stats(
 
         state = GameState()
         current_player = 1
-        move_count = 0
 
         start_time = time.time()
 
-        while move_count < max_moves:
+        while not state.is_terminal():
             if current_player == 1:
                 move = first_player(state, current_player)
             else:
@@ -300,20 +303,19 @@ def get_stats(
                 break
 
             state.make_move(move, current_player)
-            move_count += 1
-            current_player = -current_player
+            current_player = -current_player  # Switch player
 
             if verbose:
-                print(f"第 {move_count} 步: {idx_to_xyz(move)}")
+                print(f"第 {state.move_count} 步: {idx_to_xyz(move)}")
 
         end_time = time.time()
         game_time = end_time - start_time
 
-        stats.update(state, game_time)
+        stat.update(state, game_time)
 
         if verbose:
             state.print_board()
 
-    stats.result_update()
+    stat.result_update()
 
-    return stats
+    return stat
