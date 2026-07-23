@@ -142,7 +142,7 @@ def run(
         verbose: 是否打印每局详细信息（默认 False）
     """
     total_games = get_total_games(first_player, second_player, order)
-    if total_games == 0:
+    if total_games <= 0:
         return
     stats = get_stat(
         first_player, second_player, total_games=total_games, verbose=verbose

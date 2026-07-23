@@ -22,7 +22,7 @@ def main() -> None:
     2. STRONG_FIRST: 强算法先手 vs 弱算法后手
     3. SAME_LEVEL: 同算法自对弈
     """
-    print("Hello from tic-tac-toe-3x3x3-without-the-center-cell!")
+
     run_in_order(Order.WEAK_FIRST, verbose=False)
     run_in_order(Order.STRONG_FIRST, verbose=False)
     run_in_order(Order.SAME_LEVEL, verbose=False)
