@@ -29,16 +29,16 @@ AI算法模块。
 所有策略函数签名：(state: GameState, player: int) -> int | None
 """
 
-from src.algorithms.random import get_move_random
-from src.algorithms.greedy import get_move_greedy
 from src.algorithms.advanced import get_move_advanced
-from src.algorithms.minimax import get_move_minimax
+from src.algorithms.greedy import get_move_greedy
 from src.algorithms.mcts import get_move_mcts
+from src.algorithms.minimax import get_move_minimax
+from src.algorithms.random import get_move_random
 
 __all__ = [
-    "get_move_random",
-    "get_move_greedy",
     "get_move_advanced",
-    "get_move_minimax",
+    "get_move_greedy",
     "get_move_mcts",
+    "get_move_minimax",
+    "get_move_random",
 ]

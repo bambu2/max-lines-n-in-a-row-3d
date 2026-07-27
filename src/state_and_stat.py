@@ -9,8 +9,10 @@
 
 import time
 from dataclasses import dataclass, field
+
 from tqdm import tqdm
-from src.utils import xyz_to_idx, idx_to_xyz, rate_to_percentage
+
+from src.utils import idx_to_xyz, rate_to_percentage, xyz_to_idx
 
 
 class GameState:
@@ -243,7 +245,7 @@ class GameState:
         """
         return self.move_count >= 26 or len(self.legal_moves) == 0
 
-    def copy(self) -> "GameState":
+    def copy(self) -> GameState:
         """
         创建游戏状态的副本。
 

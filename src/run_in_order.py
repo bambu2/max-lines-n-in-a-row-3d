@@ -14,17 +14,17 @@
 5. get_move_mcts - 蒙特卡洛树搜索策略
 """
 
-from enum import Enum
 from collections.abc import Callable
+from enum import Enum
 
 from src.algorithms import (
-    get_move_random,
-    get_move_greedy,
     get_move_advanced,
-    get_move_minimax,
+    get_move_greedy,
     get_move_mcts,
+    get_move_minimax,
+    get_move_random,
 )
-from src.state_and_stat import get_stat, GameState
+from src.state_and_stat import GameState, get_stat
 
 
 class Order(Enum):

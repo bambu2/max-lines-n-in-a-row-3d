@@ -10,7 +10,7 @@
     python main.py
 """
 
-from src.run_in_order import run_in_order, Order
+from src.run_in_order import Order, run_in_order
 
 
 def main() -> None:

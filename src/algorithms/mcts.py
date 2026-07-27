@@ -5,8 +5,8 @@
 包含UCT（Upper Confidence Bound for Trees）节点选择策略。
 """
 
-import random
 import math
+import random
 
 from src.state_and_stat import GameState
 
