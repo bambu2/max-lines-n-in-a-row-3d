@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from tqdm import tqdm
 
 from src.config import FORBIDDEN_INDEXES, MAX_MOVE_COUNT, TOTAL_CELLS_COUNT
-from src.utils import idx_to_xyz, rate_to_percentage, xyz_to_idx
+from src.utils import coord_to_idx, idx_to_coord, rate_to_percentage
 
 
 class GameState:
@@ -32,7 +32,7 @@ class GameState:
 
     胜负判定：
     - 完成一条线（3个连续同色棋子）得1分
-    - 线的类型：X轴方向、Y轴方向、Z轴方向、对角线、跨层对角线、体对角线
+    - 线的类型：X轴方向、Y轴方向、Z轴方向、平面对角线、体对角线
     - 不含中心位置的线才有效
     - 游戏结束时得分高者获胜，得分相同为平局
     """
@@ -85,7 +85,7 @@ class GameState:
 
         for line in all_lines:
             if (1, 1, 1) not in line:
-                idx_line = [xyz_to_idx(*coord) for coord in line]
+                idx_line = [coord_to_idx(*coord) for coord in line]
                 selected_lines.append(idx_line)
 
         return selected_lines
@@ -164,7 +164,6 @@ class GameState:
         self.move_count += 1
         self.move_history.append(undo_info)
 
-        # ========== 检查新完成的线 ==========
         lines_completed = 0
         for line in self.lines:
             if idx not in line:
@@ -279,7 +278,7 @@ class GameState:
             for row in range(3):
                 line = ""
                 for col in range(3):
-                    idx = xyz_to_idx(layer, row, col)
+                    idx = coord_to_idx(layer, row, col)
                     if idx in self.forbidden_indexes:
                         line += " ✦ "
                     else:
@@ -431,7 +430,7 @@ def get_stats(
             current_player = -current_player
 
             if verbose:
-                print(f"第 {state.move_count} 步: {idx_to_xyz(move)}")
+                print(f"第 {state.move_count} 步: {idx_to_coord(move)}")
 
         end_time = time.time()
         game_time = end_time - start_time

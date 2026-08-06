@@ -1,4 +1,4 @@
-from src.utils import xyz_to_idx
+from src.utils import coord_to_idx
 
 GREATER_MATCH_COUNT = 10000
 DEFAULT_MATCH_COUNT = 100
@@ -9,5 +9,5 @@ ROW_COUNT = 3
 COLUMN_COUNT = 3
 TOTAL_CELLS_COUNT = LAYER_COUNT * ROW_COUNT * COLUMN_COUNT
 FORBIDDEN_COORDINATES = [(1, 1, 1)]
-FORBIDDEN_INDEXES = [xyz_to_idx(x, y, z) for x, y, z in FORBIDDEN_COORDINATES]
+FORBIDDEN_INDEXES = [coord_to_idx(x, y, z) for x, y, z in FORBIDDEN_COORDINATES]
 MAX_MOVE_COUNT = TOTAL_CELLS_COUNT - len(FORBIDDEN_INDEXES)

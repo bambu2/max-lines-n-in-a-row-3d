@@ -1,4 +1,4 @@
-def xyz_to_idx(layer: int, row: int, col: int) -> int:
+def coord_to_idx(layer: int, row: int, col: int) -> int:
     """
     将三维坐标 (layer, row, col) 转换为一维索引。
 
@@ -21,7 +21,7 @@ def xyz_to_idx(layer: int, row: int, col: int) -> int:
     return layer * 9 + row * 3 + col
 
 
-def idx_to_xyz(idx: int) -> tuple[int, int, int]:
+def idx_to_coord(idx: int) -> tuple[int, int, int]:
     """
     将一维索引转换为三维坐标 (layer, row, col)。
 
