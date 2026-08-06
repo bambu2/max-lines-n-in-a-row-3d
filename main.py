@@ -23,9 +23,12 @@ def main() -> None:
     3. SAME_LEVEL: 同算法自对弈
     """
 
-    run_match(Order.WEAK_FIRST, verbose=False)
-    run_match(Order.STRONG_FIRST, verbose=False)
-    run_match(Order.SAME_LEVEL, verbose=False)
+    try:
+        run_match(Order.WEAK_FIRST, verbose=True)
+        run_match(Order.STRONG_FIRST, verbose=True)
+        run_match(Order.SAME_LEVEL, verbose=True)
+    except KeyboardInterrupt:
+        print("程序被用户中断")
 
 
 if __name__ == "__main__":
