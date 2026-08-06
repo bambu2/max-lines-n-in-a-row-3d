@@ -10,7 +10,7 @@
 1. get_move_random - 随机策略
 2. get_move_greedy - 贪心策略
 3. get_move_advanced - 高级启发式策略
-4. get_move_minimax - 极小极大策略（带alpha-beta剪枝）
+4. get_move_minimax - 极小极大策略
 5. get_move_mcts - 蒙特卡洛树搜索策略
 """
 
@@ -24,7 +24,8 @@ from src.algorithms import (
     get_move_minimax,
     get_move_random,
 )
-from src.state_and_stat import GameState, get_stat
+from src.config import DEFAULT_MATCH_COUNT, GREATER_MATCH_COUNT, LESSER_MATCH_COUNT
+from src.state_and_stats import GameState, get_stats
 
 
 class Order(Enum):
@@ -64,32 +65,26 @@ def get_total_games(
     Returns:
         int: 对局数
     """
-    if order == Order.WEAK_FIRST:
-        return 100
-    elif order == Order.STRONG_FIRST:
-        return 100
-    elif order == Order.SAME_LEVEL:
+    if order == Order.SAME_LEVEL:
         if (
             first_player.__name__ == "get_move_random"
             and second_player.__name__ == "get_move_random"
         ):
-            return 50000
+            return GREATER_MATCH_COUNT
         elif (
             first_player.__name__ == "get_move_minimax"
             and second_player.__name__ == "get_move_minimax"
-        ):
-            return 10
-        elif (
+        ) or (
             first_player.__name__ == "get_move_mcts"
             and second_player.__name__ == "get_move_mcts"
         ):
-            return 10
+            return LESSER_MATCH_COUNT
         return 0
     else:
-        return 100
+        return DEFAULT_MATCH_COUNT
 
 
-def run_in_order(order: Order, verbose: bool = False) -> None:
+def run_match(order: Order, verbose: bool = False) -> None:
     """
     按指定顺序运行所有算法对弈。
 
@@ -110,23 +105,27 @@ def run_in_order(order: Order, verbose: bool = False) -> None:
                 for j in range(i + 1, len(fn_list)):
                     first_player = fn_list[i]
                     second_player = fn_list[j]
-                    run(first_player, second_player, order, verbose=verbose)
+                    run_single_match(
+                        first_player, second_player, order, verbose=verbose
+                    )
         elif order == Order.STRONG_FIRST:
             for i in range(len(fn_list)):
                 for j in range(i + 1, len(fn_list)):
                     first_player = fn_list[j]
                     second_player = fn_list[i]
-                    run(first_player, second_player, order, verbose=verbose)
+                    run_single_match(
+                        first_player, second_player, order, verbose=verbose
+                    )
         elif order == Order.SAME_LEVEL:
             for i in range(len(fn_list)):
                 first_player = fn_list[i]
                 second_player = fn_list[i]
-                run(first_player, second_player, order, verbose=verbose)
-    except Exception as e:
+                run_single_match(first_player, second_player, order, verbose=verbose)
+    except (AttributeError, ValueError, IndexError) as e:
         print(f"An error occurred: {e}")
 
 
-def run(
+def run_single_match(
     first_player: Callable[[GameState, int], int | None],
     second_player: Callable[[GameState, int], int | None],
     order: Order,
@@ -143,8 +142,8 @@ def run(
     """
     total_games = get_total_games(first_player, second_player, order)
     if total_games <= 0:
-        return
-    stats = get_stat(
+        raise ValueError(f"Invalid total_games: {total_games}. ")
+    stats = get_stats(
         first_player, second_player, total_games=total_games, verbose=verbose
     )
     stats.print_stats()

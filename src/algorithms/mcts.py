@@ -8,7 +8,7 @@
 import math
 import random
 
-from src.state_and_stat import GameState
+from src.state_and_stats import GameState
 
 
 class MCTSNode:
@@ -78,7 +78,7 @@ class MCTSNode:
 
     def best_child(
         self, exploration_constant: float = 1.414
-    ) -> tuple["MCTSNode | None", float]:
+    ) -> tuple[MCTSNode | None, float]:
         """
         使用UCT算法选择最优子节点。
 
@@ -100,7 +100,7 @@ class MCTSNode:
             if child.visits == 0:
                 return child, float("inf")
 
-        best_child: "MCTSNode | None" = None
+        best_child: MCTSNode | None = None
         best_score = -float("inf")
         for child in self.children:
             win_rate = child.wins / child.visits
@@ -127,7 +127,7 @@ class MCTS:
     Attributes:
         root: 根节点
         iterations: 迭代次数（默认500）
-        exploration_constant: 探索常数（默认1.41）
+        exploration_constant: 探索常数（默认1.414）
         current_player: 当前玩家
     """
 
@@ -135,7 +135,7 @@ class MCTS:
         self,
         state: GameState,
         iterations: int = 500,
-        exploration_constant: float = 1.41,
+        exploration_constant: float = 1.414,
     ):
         """
         初始化MCTS实例。
@@ -143,7 +143,7 @@ class MCTS:
         Args:
             state: 游戏状态
             iterations: 迭代次数（默认500）
-            exploration_constant: 探索常数（默认1.41）
+            exploration_constant: 探索常数（默认1.414）
 
         Raises:
             ValueError: 如果state为None
@@ -192,7 +192,7 @@ class MCTS:
                 winner = self._simulate(node.state, player_to_start=node.player_to_move)
                 self._backpropagate(node, winner)
 
-            except Exception as e:
+            except (AttributeError, ValueError, IndexError) as e:
                 print(f"⚠️ 第 {iteration} 次迭代出错: {e}")
                 continue
 
@@ -417,6 +417,6 @@ def get_move_mcts(state: GameState, player: int, iterations: int = 500) -> int |
         if best_move is None:
             return valid_moves[0]
         return best_move
-    except Exception as e:
+    except (AttributeError, ValueError, IndexError) as e:
         print(f"❌ MCTS 搜索失败: {e}")
         return valid_moves[0] if valid_moves else None

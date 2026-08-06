@@ -4,7 +4,8 @@
 使用评估函数评估每个位置的潜力，综合进攻、防守和位置因素。
 """
 
-from src.state_and_stat import GameState
+from src.config import COLUMN_COUNT, LAYER_COUNT, ROW_COUNT
+from src.state_and_stats import GameState
 from src.utils import idx_to_xyz
 
 
@@ -78,13 +79,29 @@ def get_move_advanced(state: GameState, player: int) -> int | None:
                     defense_score += 5
 
         position_bonus = 0
-        layer, r, c = idx_to_xyz(idx)
-        if layer in (0, 2) and r in (0, 2) and c in (0, 2):
+        layer, row, column = idx_to_xyz(idx)
+        if (
+            layer in (0, LAYER_COUNT - 1)
+            and row in (0, ROW_COUNT - 1)
+            and column in (0, COLUMN_COUNT - 1)
+        ):
             position_bonus = 3
         elif (
-            (layer == 1 and r in (0, 2) and c in (0, 2))
-            or (r == 1 and layer in (0, 2) and c in (0, 2))
-            or (c == 1 and layer in (0, 2) and r in (0, 2))
+            (
+                layer not in (0, LAYER_COUNT - 1)
+                and row in (0, ROW_COUNT - 1)
+                and column in (0, COLUMN_COUNT - 1)
+            )
+            or (
+                row not in (0, ROW_COUNT - 1)
+                and layer in (0, LAYER_COUNT - 1)
+                and column in (0, COLUMN_COUNT - 1)
+            )
+            or (
+                column not in (0, COLUMN_COUNT - 1)
+                and layer in (0, LAYER_COUNT - 1)
+                and row in (0, ROW_COUNT - 1)
+            )
         ):
             position_bonus = 2
         else:

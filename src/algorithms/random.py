@@ -6,7 +6,7 @@
 
 import random
 
-from src.state_and_stat import GameState
+from src.state_and_stats import GameState
 
 
 def get_move_random(state: GameState, player: int) -> int | None:

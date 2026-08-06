@@ -4,7 +4,7 @@
 使用带alpha-beta剪枝的minimax算法搜索最优走法。
 """
 
-from src.state_and_stat import GameState
+from src.state_and_stats import GameState
 
 
 def get_move_minimax(state: GameState, player: int, depth: int = 4) -> int | None:

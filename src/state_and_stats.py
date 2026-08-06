@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 
 from tqdm import tqdm
 
+from src.config import BANNED_IDX
 from src.utils import idx_to_xyz, rate_to_percentage, xyz_to_idx
 
 
@@ -45,7 +46,7 @@ class GameState:
         self.current_player: int = 1  # 当前玩家（1或-1）
         self.move_history: list = []  # 落子历史记录，用于 undo
         self.lines = self._select_lines()  # 有效连线列表
-        self.banned_idx = 13  # 禁止使用的中心位置索引
+        self.banned_idx = BANNED_IDX  # 禁止使用的中心位置索引
         self._legal_moves = [idx for idx in range(27) if idx != self.banned_idx]
 
     def is_legal_move(self, idx: int) -> bool:
@@ -288,7 +289,7 @@ class GameState:
 
 
 @dataclass(slots=True)
-class Stat:
+class Stats:
     """
     对局统计数据类。
 
@@ -387,13 +388,9 @@ class Stat:
         print(f"  总耗时:   {sum(self.total_time):.2f}秒")
 
 
-def get_stat(
-    first_player,
-    second_player,
-    total_games: int,
-    verbose: bool = False,
-    max_moves: int = 26,
-) -> Stat:
+def get_stats(
+    first_player, second_player, total_games: int, verbose: bool = False
+) -> Stats:
     """
     运行多局对弈并收集统计信息。
 
@@ -402,12 +399,11 @@ def get_stat(
         second_player: 后手玩家的策略函数，签名为 (state, player) -> int | None
         total_games: 总对局数
         verbose: 是否打印每局详细信息（默认 False）
-        max_moves: 最大步数限制（默认 26，即所有可用位置）
 
     Returns:
         Stat: 统计结果对象
     """
-    stat = Stat(total_games)
+    stat = Stats(total_games)
 
     print(
         f"先手: {first_player.__name__} vs 后手: {second_player.__name__}, 对局数: {total_games}"

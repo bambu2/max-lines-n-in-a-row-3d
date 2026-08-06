@@ -4,7 +4,7 @@
 选择能立即形成最多线的位置，包含基本防守逻辑。
 """
 
-from src.state_and_stat import GameState
+from src.state_and_stats import GameState
 
 
 def get_move_greedy(state: GameState, player: int) -> int | None:

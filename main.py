@@ -1,5 +1,5 @@
 """
-3x3x3 井字棋（移除中心位置）AI对弈程序入口。
+空心立方井字棋程序入口
 
 该程序实现了5种不同强度的AI算法，并支持三种对弈模式：
 - WEAK_FIRST: 较弱算法先手，较强算法后手
@@ -10,7 +10,7 @@
     python main.py
 """
 
-from src.run_in_order import Order, run_in_order
+from src.run_match import Order, run_match
 
 
 def main() -> None:
@@ -23,9 +23,9 @@ def main() -> None:
     3. SAME_LEVEL: 同算法自对弈
     """
 
-    run_in_order(Order.WEAK_FIRST, verbose=False)
-    run_in_order(Order.STRONG_FIRST, verbose=False)
-    run_in_order(Order.SAME_LEVEL, verbose=False)
+    run_match(Order.WEAK_FIRST, verbose=False)
+    run_match(Order.STRONG_FIRST, verbose=False)
+    run_match(Order.SAME_LEVEL, verbose=False)
 
 
 if __name__ == "__main__":
