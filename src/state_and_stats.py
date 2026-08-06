@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 
 from tqdm import tqdm
 
-from src.config import FORBIDDEN_INDEXES, MAX_MOVE_COUNT
+from src.config import FORBIDDEN_INDEXES, MAX_MOVE_COUNT, TOTAL_CELLS_COUNT
 from src.utils import idx_to_xyz, rate_to_percentage, xyz_to_idx
 
 
@@ -21,9 +21,9 @@ class GameState:
     3x3x3 井字棋游戏状态类（移除中心位置）。
 
     棋盘结构：
-    - 3层 × 3行 × 3列 = 27个位置
+    - 3层 × 3行 × 3列 = TOTAL_CELLS_COUNT 个位置
     - 中心位置 (1,1,1) 即索引 13 被禁止使用
-    - 实际可用位置：26个
+    - 实际可用位置：MAX_MOVE_COUNT 个
 
     玩家标记：
     - 0: 空位
@@ -39,7 +39,7 @@ class GameState:
 
     def __init__(self):
         """初始化游戏状态。"""
-        self.board: list = [0] * 27  # 0=空, 1=玩家A, -1=玩家B
+        self.board: list = [0] * TOTAL_CELLS_COUNT  # 0=空, 1=玩家A, -1=玩家B
         self.score_first_player: int = 0  # 先手玩家得分
         self.score_second_player: int = 0  # 后手玩家得分
         self.move_count: int = 0  # 已落子数
@@ -48,7 +48,7 @@ class GameState:
         self.lines = self._select_lines()  # 有效连线列表
         self.forbidden_indexes = FORBIDDEN_INDEXES  # 禁止使用的中心位置索引
         self._legal_moves = [
-            idx for idx in range(27) if idx not in self.forbidden_indexes
+            idx for idx in range(TOTAL_CELLS_COUNT) if idx not in self.forbidden_indexes
         ]
 
     def is_legal_move(self, idx: int) -> bool:
@@ -94,45 +94,42 @@ class GameState:
         """
         生成3x3x3棋盘中所有可能的连线。
 
-        包含6种类型的线：
-        1. X轴方向（每层每行）：9条
-        2. Y轴方向（每层每列）：9条
-        3. Z轴方向（跨层同一位置）：9条
-        4. 每层对角线（3层×2条）：6条
-        5. 跨层对角线（行方向+列方向）：12条
-        6. 体对角线：4条
-
-        总计：49条线
-
         Returns:
             list[list[tuple[int, int, int]]]: 所有连线的三维坐标列表
         """
         lines = []
 
+        # 1. X轴方向（每层每行）：9条
         for layer in range(3):
-            for r in range(3):
-                lines.append([(layer, r, 0), (layer, r, 1), (layer, r, 2)])
+            for row in range(3):
+                lines.append([(layer, row, 0), (layer, row, 1), (layer, row, 2)])
 
+        # 2. Y轴方向（每层每列）：9条
         for layer in range(3):
-            for c in range(3):
-                lines.append([(layer, 0, c), (layer, 1, c), (layer, 2, c)])
+            for column in range(3):
+                lines.append(
+                    [(layer, 0, column), (layer, 1, column), (layer, 2, column)]
+                )
 
-        for r in range(3):
-            for c in range(3):
-                lines.append([(0, r, c), (1, r, c), (2, r, c)])
+        # 3. Z轴方向（跨层同一位置）：9条
+        for row in range(3):
+            for column in range(3):
+                lines.append([(0, row, column), (1, row, column), (2, row, column)])
 
+        # 4. 平面对角线：18条
         for layer in range(3):
             lines.append([(layer, 0, 0), (layer, 1, 1), (layer, 2, 2)])
             lines.append([(layer, 0, 2), (layer, 1, 1), (layer, 2, 0)])
 
-        for r in range(3):
-            lines.append([(0, r, 0), (1, r, 1), (2, r, 2)])
-            lines.append([(0, r, 2), (1, r, 1), (2, r, 0)])
+        for row in range(3):
+            lines.append([(0, row, 0), (1, row, 1), (2, row, 2)])
+            lines.append([(0, row, 2), (1, row, 1), (2, row, 0)])
 
-        for c in range(3):
-            lines.append([(0, 0, c), (1, 1, c), (2, 2, c)])
-            lines.append([(0, 2, c), (1, 1, c), (2, 0, c)])
+        for column in range(3):
+            lines.append([(0, 0, column), (1, 1, column), (2, 2, column)])
+            lines.append([(0, 2, column), (1, 1, column), (2, 0, column)])
 
+        # 5. 体对角线：4条
         lines.append([(0, 0, 0), (1, 1, 1), (2, 2, 2)])
         lines.append([(0, 0, 2), (1, 1, 1), (2, 2, 0)])
         lines.append([(0, 2, 0), (1, 1, 1), (2, 0, 2)])
@@ -273,7 +270,7 @@ class GameState:
         - ·: 空位
         - X: 玩家1（先手）
         - O: 玩家-1（后手）
-        - ✦: 禁止使用的中心位置
+        - ✦: 禁止使用的位置
         """
         symbols = {0: "·", 1: "X", -1: "O"}
 
@@ -358,6 +355,7 @@ class Stats:
         self.avg_score_first_player = sum(self.scores_first_player) / self.total_games
         self.avg_score_second_player = sum(self.scores_second_player) / self.total_games
         self.avg_time = sum(self.total_time) / self.total_games
+
         self.win_rate_first_player = self.wins_first_player / self.total_games
         self.win_rate_second_player = self.wins_second_player / self.total_games
         self.draw_rate = self.draws / self.total_games
