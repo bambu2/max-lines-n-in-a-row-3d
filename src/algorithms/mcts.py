@@ -8,6 +8,7 @@
 import math
 import random
 
+from src.config import MAX_MOVE_COUNT
 from src.state_and_stats import GameState
 
 
@@ -290,13 +291,13 @@ class MCTS:
             return 0
 
         player = player_to_start
-        max_steps = 26 - sim_state.move_count
+        max_steps = MAX_MOVE_COUNT - sim_state.move_count
         if max_steps <= 0:
             return self._get_winner(sim_state)
 
         steps = 0
         max_sim_steps = min(max_steps, 30)
-        while sim_state.move_count < 26 and steps < max_sim_steps:
+        while sim_state.move_count < MAX_MOVE_COUNT and steps < max_sim_steps:
             valid_moves = sim_state.legal_moves
             if not valid_moves:
                 break

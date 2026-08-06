@@ -146,10 +146,10 @@ def get_position_importance(pos: int) -> int:
     获取位置的战略重要性评分（0-10）。
 
     位置分类：
-    - 角格（8个）：索引 0, 2, 6, 8, 18, 20, 24, 26 → 评分 8
-    - 边格（12个）：索引 1, 3, 5, 7, 9, 11, 15, 17, 19, 21, 23, 25 → 评分 5
-    - 面心格（6个）：索引 4, 10, 12, 14, 16, 22 → 评分 3
-    - 中心格（1个）：索引 13（禁止使用）→ 评分 0
+    - 角格（8个）： → 评分 8
+    - 边格（12个）： → 评分 5
+    - 面心格（6个）： → 评分 3
+    - 中心格（1个）：→ 评分 0
 
     Args:
         pos: 位置索引（0-26）
@@ -189,7 +189,7 @@ def calculate_sophisticated_bonus(state: GameState, player: int) -> int:
     """
     bonus = 0
     for pos in range(27):
-        if pos == state.banned_idx:
+        if pos in state.forbidden_indexes:
             continue
         if state.board[pos] == player:
             bonus += get_position_importance(pos)

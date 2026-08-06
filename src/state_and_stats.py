@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 
 from tqdm import tqdm
 
-from src.config import BANNED_IDX
+from src.config import FORBIDDEN_INDEXES, MAX_MOVE_COUNT
 from src.utils import idx_to_xyz, rate_to_percentage, xyz_to_idx
 
 
@@ -46,8 +46,10 @@ class GameState:
         self.current_player: int = 1  # 当前玩家（1或-1）
         self.move_history: list = []  # 落子历史记录，用于 undo
         self.lines = self._select_lines()  # 有效连线列表
-        self.banned_idx = BANNED_IDX  # 禁止使用的中心位置索引
-        self._legal_moves = [idx for idx in range(27) if idx != self.banned_idx]
+        self.forbidden_indexes = FORBIDDEN_INDEXES  # 禁止使用的中心位置索引
+        self._legal_moves = [
+            idx for idx in range(27) if idx not in self.forbidden_indexes
+        ]
 
     def is_legal_move(self, idx: int) -> bool:
         """
@@ -238,19 +240,19 @@ class GameState:
         判断游戏是否结束。
 
         游戏结束条件：
-        - 所有26个可用位置都已落子
+        - 所有可用位置都已落子
         - 没有合法落子位置
 
         Returns:
             bool: True 表示游戏结束，False 表示游戏继续
         """
-        return self.move_count >= 26 or len(self.legal_moves) == 0
+        return self.move_count >= MAX_MOVE_COUNT or len(self.legal_moves) == 0
 
     def copy(self) -> GameState:
         """
         创建游戏状态的副本。
 
-        深拷贝 board，浅拷贝只读属性（lines 和 banned_idx）。
+        深拷贝 board，浅拷贝只读属性。
 
         Returns:
             GameState: 游戏状态副本
@@ -281,7 +283,7 @@ class GameState:
                 line = ""
                 for col in range(3):
                     idx = xyz_to_idx(layer, row, col)
-                    if idx == self.banned_idx:
+                    if idx in self.forbidden_indexes:
                         line += " ✦ "
                     else:
                         line += f" {symbols[self.board[idx]]} "
