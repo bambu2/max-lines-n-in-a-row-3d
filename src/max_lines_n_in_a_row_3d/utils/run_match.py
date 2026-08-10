@@ -17,15 +17,15 @@
 from collections.abc import Callable
 from enum import Enum
 
-from src.algorithms import (
+from max_lines_n_in_a_row_3d.algorithms import (
     get_move_advanced,
     get_move_greedy,
     get_move_mcts,
     get_move_minimax,
     get_move_random,
 )
-from src.config import DEFAULT_MATCH_COUNT, GREATER_MATCH_COUNT, LESSER_MATCH_COUNT
-from src.state_and_stats import GameState, get_stats
+from max_lines_n_in_a_row_3d.config import settings
+from max_lines_n_in_a_row_3d.models import GameState, get_stats
 
 
 class Order(Enum):
@@ -70,7 +70,7 @@ def get_total_games(
             first_player.__name__ == "get_move_random"
             and second_player.__name__ == "get_move_random"
         ):
-            return GREATER_MATCH_COUNT
+            return settings.greater_matches
         elif (
             first_player.__name__ == "get_move_minimax"
             and second_player.__name__ == "get_move_minimax"
@@ -78,10 +78,10 @@ def get_total_games(
             first_player.__name__ == "get_move_mcts"
             and second_player.__name__ == "get_move_mcts"
         ):
-            return LESSER_MATCH_COUNT
+            return settings.lesser_matches
         return 0
     else:
-        return DEFAULT_MATCH_COUNT
+        return settings.default_matches
 
 
 def run_match(order: Order, verbose: bool = False) -> None:

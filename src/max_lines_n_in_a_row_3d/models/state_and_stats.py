@@ -13,9 +13,10 @@ from dataclasses import dataclass, field
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
-from src.config import FORBIDDEN_INDEXES, MAX_MOVE_COUNT, TOTAL_CELLS_COUNT
-from src.utils import coord_to_idx, idx_to_coord, rate_to_percentage
 from tqdm import tqdm
+
+from max_lines_n_in_a_row_3d.config import settings
+from max_lines_n_in_a_row_3d.utils import coord_to_idx, idx_to_coord, rate_to_percentage
 
 
 class GameState:
@@ -41,16 +42,18 @@ class GameState:
 
     def __init__(self):
         """初始化游戏状态。"""
-        self.board: list = [0] * TOTAL_CELLS_COUNT  # 0=空, 1=玩家A, -1=玩家B
+        self.board: list = [0] * settings.total_cells  # 0=空, 1=玩家A, -1=玩家B
         self.score_first_player: int = 0  # 先手玩家得分
         self.score_second_player: int = 0  # 后手玩家得分
         self.move_count: int = 0  # 已落子数
         self.current_player: int = 1  # 当前玩家（1或-1）
         self.move_history: list = []  # 落子历史记录，用于 undo
         self.lines = self._select_lines()  # 有效连线列表
-        self.forbidden_indexes = FORBIDDEN_INDEXES  # 禁止使用的中心位置索引
+        self.forbidden_indexes = settings.forbidden_indexes  # 禁止使用的中心位置索引
         self._legal_moves = [
-            idx for idx in range(TOTAL_CELLS_COUNT) if idx not in self.forbidden_indexes
+            idx
+            for idx in range(settings.total_cells)
+            if idx not in self.forbidden_indexes
         ]
 
     def is_legal_move(self, idx: int) -> bool:
@@ -244,7 +247,7 @@ class GameState:
         Returns:
             bool: True 表示游戏结束，False 表示游戏继续
         """
-        return self.move_count >= MAX_MOVE_COUNT or len(self.legal_moves) == 0
+        return self.move_count >= settings.move_limit or len(self.legal_moves) == 0
 
     def copy(self) -> GameState:
         """

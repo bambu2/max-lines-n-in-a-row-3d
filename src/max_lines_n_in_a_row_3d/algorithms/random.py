@@ -6,7 +6,7 @@
 
 import random
 
-from src.state_and_stats import GameState
+from max_lines_n_in_a_row_3d.models import GameState
 
 
 def get_move_random(state: GameState, player: int) -> int | None:

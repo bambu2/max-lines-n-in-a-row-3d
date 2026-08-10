@@ -10,7 +10,7 @@
     python main.py
 """
 
-from src.run_match import Order, run_match
+from max_lines_n_in_a_row_3d.utils import Order, run_match
 
 
 def main() -> None:

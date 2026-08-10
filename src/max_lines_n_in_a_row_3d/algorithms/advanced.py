@@ -4,9 +4,9 @@
 使用评估函数评估每个位置的潜力，综合进攻、防守和位置因素。
 """
 
-from src.config import COLUMN_COUNT, LAYER_COUNT, ROW_COUNT
-from src.state_and_stats import GameState
-from src.utils import idx_to_coord
+from max_lines_n_in_a_row_3d.config import settings
+from max_lines_n_in_a_row_3d.models import GameState
+from max_lines_n_in_a_row_3d.utils import idx_to_coord
 
 
 def get_move_advanced(state: GameState, player: int) -> int | None:
@@ -81,26 +81,26 @@ def get_move_advanced(state: GameState, player: int) -> int | None:
         position_bonus = 0
         layer, row, column = idx_to_coord(idx)
         if (
-            layer in (0, LAYER_COUNT - 1)
-            and row in (0, ROW_COUNT - 1)
-            and column in (0, COLUMN_COUNT - 1)
+            layer in (0, settings.layer_count - 1)
+            and row in (0, settings.row_count - 1)
+            and column in (0, settings.column_count - 1)
         ):
             position_bonus = 3
         elif (
             (
-                layer not in (0, LAYER_COUNT - 1)
-                and row in (0, ROW_COUNT - 1)
-                and column in (0, COLUMN_COUNT - 1)
+                layer not in (0, settings.layer_count - 1)
+                and row in (0, settings.row_count - 1)
+                and column in (0, settings.column_count - 1)
             )
             or (
-                row not in (0, ROW_COUNT - 1)
-                and layer in (0, LAYER_COUNT - 1)
-                and column in (0, COLUMN_COUNT - 1)
+                row not in (0, settings.row_count - 1)
+                and layer in (0, settings.layer_count - 1)
+                and column in (0, settings.column_count - 1)
             )
             or (
-                column not in (0, COLUMN_COUNT - 1)
-                and layer in (0, LAYER_COUNT - 1)
-                and row in (0, ROW_COUNT - 1)
+                column not in (0, settings.column_count - 1)
+                and layer in (0, settings.layer_count - 1)
+                and row in (0, settings.row_count - 1)
             )
         ):
             position_bonus = 2

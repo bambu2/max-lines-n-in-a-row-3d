@@ -4,7 +4,7 @@
 选择能立即形成最多线的位置，包含基本防守逻辑。
 """
 
-from src.state_and_stats import GameState
+from max_lines_n_in_a_row_3d.models import GameState
 
 
 def get_move_greedy(state: GameState, player: int) -> int | None:

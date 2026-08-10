@@ -8,8 +8,8 @@
 import math
 import random
 
-from src.config import MAX_MOVE_COUNT
-from src.state_and_stats import GameState
+from max_lines_n_in_a_row_3d.config import settings
+from max_lines_n_in_a_row_3d.models import GameState
 
 
 class MCTSNode:
@@ -291,13 +291,13 @@ class MCTS:
             return 0
 
         player = player_to_start
-        max_steps = MAX_MOVE_COUNT - sim_state.move_count
+        max_steps = settings.move_limit - sim_state.move_count
         if max_steps <= 0:
             return self._get_winner(sim_state)
 
         steps = 0
         max_sim_steps = min(max_steps, 30)
-        while sim_state.move_count < MAX_MOVE_COUNT and steps < max_sim_steps:
+        while sim_state.move_count < settings.move_limit and steps < max_sim_steps:
             valid_moves = sim_state.legal_moves
             if not valid_moves:
                 break
