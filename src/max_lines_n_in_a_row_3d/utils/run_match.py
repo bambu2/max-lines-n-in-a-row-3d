@@ -84,7 +84,7 @@ def get_total_games(
         return settings.default_matches
 
 
-def run_match(order: Order, verbose: bool = False) -> None:
+def run_match(order: Order) -> None:
     """
     按指定顺序运行所有算法对弈。
 
@@ -92,7 +92,7 @@ def run_match(order: Order, verbose: bool = False) -> None:
         order: 对弈顺序模式
         verbose: 是否打印每局详细信息（默认 False）
     """
-    fn_list = [
+    algorithms = [
         get_move_random,
         get_move_greedy,
         get_move_advanced,
@@ -101,26 +101,22 @@ def run_match(order: Order, verbose: bool = False) -> None:
     ]
     try:
         if order == Order.WEAK_FIRST:
-            for i in range(len(fn_list)):
-                for j in range(i + 1, len(fn_list)):
-                    first_player = fn_list[i]
-                    second_player = fn_list[j]
-                    run_single_match(
-                        first_player, second_player, order, verbose=verbose
-                    )
+            for i in range(len(algorithms)):
+                for j in range(i + 1, len(algorithms)):
+                    first_player = algorithms[i]
+                    second_player = algorithms[j]
+                    run_single_match(first_player, second_player, order)
         elif order == Order.STRONG_FIRST:
-            for i in range(len(fn_list)):
-                for j in range(i + 1, len(fn_list)):
-                    first_player = fn_list[j]
-                    second_player = fn_list[i]
-                    run_single_match(
-                        first_player, second_player, order, verbose=verbose
-                    )
+            for i in range(len(algorithms)):
+                for j in range(i + 1, len(algorithms)):
+                    first_player = algorithms[j]
+                    second_player = algorithms[i]
+                    run_single_match(first_player, second_player, order)
         elif order == Order.SAME_LEVEL:
-            for i in range(len(fn_list)):
-                first_player = fn_list[i]
-                second_player = fn_list[i]
-                run_single_match(first_player, second_player, order, verbose=verbose)
+            for i in range(len(algorithms)):
+                first_player = algorithms[i]
+                second_player = algorithms[i]
+                run_single_match(first_player, second_player, order)
     except (AttributeError, ValueError, IndexError) as e:
         print(f"An error occurred: {e}")
 
@@ -129,7 +125,6 @@ def run_single_match(
     first_player: Callable[[GameState, int], int | None],
     second_player: Callable[[GameState, int], int | None],
     order: Order,
-    verbose: bool = False,
 ) -> None:
     """
     执行一组对弈并打印统计结果。
@@ -138,12 +133,9 @@ def run_single_match(
         first_player: 先手玩家策略函数
         second_player: 后手玩家策略函数
         order: 对弈顺序模式
-        verbose: 是否打印每局详细信息（默认 False）
     """
     total_games = get_total_games(first_player, second_player, order)
     if total_games <= 0:
         raise ValueError(f"Invalid total_games: {total_games}. ")
-    stats = get_stats(
-        first_player, second_player, total_games=total_games, verbose=verbose
-    )
+    stats = get_stats(first_player, second_player, total_games=total_games)
     stats.print_stats()

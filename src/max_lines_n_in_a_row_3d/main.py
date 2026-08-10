@@ -10,10 +10,13 @@
     python main.py
 """
 
+from max_lines_n_in_a_row_3d.logger import get_logger
 from max_lines_n_in_a_row_3d.utils import Order, run_match
 
+logger = get_logger(__name__)
 
-def main() -> None:
+
+def main():
     """
     程序主函数。
 
@@ -24,11 +27,11 @@ def main() -> None:
     """
 
     try:
-        run_match(Order.WEAK_FIRST, verbose=False)
-        run_match(Order.STRONG_FIRST, verbose=False)
-        run_match(Order.SAME_LEVEL, verbose=False)
+        run_match(Order.WEAK_FIRST)
+        run_match(Order.STRONG_FIRST)
+        run_match(Order.SAME_LEVEL)
     except KeyboardInterrupt:
-        print("程序被用户中断")
+        logger.info("程序被用户中断")
 
 
 if __name__ == "__main__":

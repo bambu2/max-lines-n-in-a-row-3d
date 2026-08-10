@@ -6,27 +6,26 @@
 
 ### 环境要求
 
-- Python 3.10+
-- 依赖库：`tqdm` `seaborn`
+``` toml
+requires-python = ">=3.14"
+dependencies = [
+    "matplotlib>=3.11.1",
+    "pydantic-settings>=2.15.0",
+    "seaborn>=0.13.2",
+    "tqdm>=4.68.4",
+]
+```
 
 ### 安装依赖
 
-```bash
+``` bash
 uv sync
 ```
 
 ### 运行程序
 
-```bash
-python main.py
-```
-
-### 详细模式
-
-设置 `verbose=True` 可以打印每局的详细信息：
-
-```python
-run_in_order(Order.WEAK_FIRST, verbose=True)
+``` bash
+uv run python -m max_lines_n_in_a_row_3d.main
 ```
 
 ## 游戏规则
