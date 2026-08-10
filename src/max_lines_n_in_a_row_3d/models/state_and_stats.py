@@ -16,7 +16,10 @@ import seaborn as sns
 from tqdm import tqdm
 
 from max_lines_n_in_a_row_3d.config import settings
+from max_lines_n_in_a_row_3d.logger import get_logger
 from max_lines_n_in_a_row_3d.utils import coord_to_idx, idx_to_coord, rate_to_percentage
+
+logger = get_logger(__name__)
 
 
 class GameState:
@@ -408,9 +411,7 @@ class Stats:
         print(f"  总耗时:   {sum(self.total_time):.2f}秒")
 
 
-def get_stats(
-    first_player, second_player, total_games: int, verbose: bool = False
-) -> Stats:
+def get_stats(first_player, second_player, total_games: int) -> Stats:
     """
     运行多局对弈并收集统计信息。
 
@@ -418,20 +419,19 @@ def get_stats(
         first_player: 先手玩家的策略函数，签名为 (state, player) -> int | None
         second_player: 后手玩家的策略函数，签名为 (state, player) -> int | None
         total_games: 总对局数
-        verbose: 是否打印每局详细信息（默认 False）
 
     Returns:
         Stat: 统计结果对象
     """
     stat = Stats(total_games)
 
-    print(
+    logger.info(
         f"先手: {first_player.__name__} vs 后手: {second_player.__name__}, 对局数: {total_games}"
     )
 
     for i in tqdm(range(total_games)):
-        if verbose:
-            print(f"第 {i + 1}/{total_games} 局")
+        if settings.DEBUG:
+            logger.debug(f"第 {i + 1}/{total_games} 局")
 
         state = GameState()
         current_player = 1
@@ -450,7 +450,7 @@ def get_stats(
             state.make_move(move, current_player)
             current_player = -current_player
 
-            if verbose:
+            if settings.DEBUG:
                 print(f"第 {state.move_count} 步: {idx_to_coord(move)}")
 
         end_time = time.time()
@@ -458,7 +458,7 @@ def get_stats(
 
         stat.update(state, game_time)
 
-        if verbose:
+        if settings.DEBUG:
             state.print_board()
 
     stat.result_update()

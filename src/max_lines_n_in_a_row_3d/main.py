@@ -1,6 +1,4 @@
 """
-空心立方井字棋程序入口
-
 该程序实现了5种不同强度的AI算法，并支持三种对弈模式：
 - WEAK_FIRST: 较弱算法先手，较强算法后手
 - STRONG_FIRST: 较强算法先手，较弱算法后手
@@ -11,7 +9,7 @@
 """
 
 from max_lines_n_in_a_row_3d.logger import get_logger
-from max_lines_n_in_a_row_3d.utils import Order, run_match
+from max_lines_n_in_a_row_3d.services import Order, run_match
 
 logger = get_logger(__name__)
 
