@@ -10,10 +10,12 @@
 import time
 from dataclasses import dataclass, field
 
-from tqdm import tqdm
-
+import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
 from src.config import FORBIDDEN_INDEXES, MAX_MOVE_COUNT, TOTAL_CELLS_COUNT
 from src.utils import coord_to_idx, idx_to_coord, rate_to_percentage
+from tqdm import tqdm
 
 
 class GameState:
@@ -361,6 +363,22 @@ class Stats:
 
     def print_stats(self) -> None:
         """打印统计结果到控制台。"""
+        df_scores = pd.DataFrame(
+            {
+                "player": ["first"] * self.total_games + ["second"] * self.total_games,
+                "connections": self.scores_first_player + self.scores_second_player,
+            }
+        )
+        plt.figure(figsize=(10, 6))
+        sns.boxplot(data=df_scores, x="player", y="connections")
+        sns.swarmplot(data=df_scores, x="player", y="connections", color=".25")
+        plt.xlabel("player")
+        plt.ylabel("connections")
+        plt.title("connections distribution for first and second player")
+        plt.show(block=False)
+        plt.pause(10)
+        plt.close()
+
         print("🏆 胜负统计:")
         print(
             f"  先手胜: {self.wins_first_player} ({rate_to_percentage(self.win_rate_first_player)})"

@@ -1,39 +1,24 @@
-# 空心立方体井字棋对弈程序
+# 最多连线三维n子棋游戏
 
-这是一个基于 Python 的空心立方体井字棋对弈程序，棋盘中心位置被移除，包含 5 种不同强度的算法，支持多种对弈模式。
+一个三维n子棋游戏，目标是尽可能多地连线，有5个算法相互竞争。
 
 ## 运行方式
 
 ### 环境要求
 
 - Python 3.10+
-- 依赖库：`tqdm`
+- 依赖库：`tqdm` `seaborn`
 
 ### 安装依赖
 
 ```bash
-uv install
+uv sync
 ```
 
 ### 运行程序
 
 ```bash
 python main.py
-```
-
-### 运行特定模式
-
-```python
-from src.run_in_order import run_in_order, Order
-
-# 运行弱算法先手模式
-run_in_order(Order.WEAK_FIRST, verbose=False)
-
-# 运行强算法先手模式
-run_in_order(Order.STRONG_FIRST, verbose=False)
-
-# 运行同算法自对弈模式
-run_in_order(Order.SAME_LEVEL, verbose=False)
 ```
 
 ### 详细模式
@@ -55,15 +40,15 @@ run_in_order(Order.WEAK_FIRST, verbose=True)
 ### 玩家标记
 
 - `·`: 空位
-- `X`: 先手玩家（玩家A）
-- `O`: 后手玩家（玩家B）
-- `✦`: 禁止使用的中心位置
+- `X`: 先手玩家
+- `O`: 后手玩家
+- `✦`: 禁止使用的位置
 
 ### 胜负判定
 
-- 完成一条线（3 个连续同色棋子）得 1 分
+- 完成一条线得 1 分
 - 线的类型包括：X轴方向、Y轴方向、Z轴方向、对角线、跨层对角线、体对角线
-- **不含中心位置的线才有效**
+- 不含禁用位置的线才有效
 - 游戏结束时得分高者获胜，得分相同为平局
 
 ## 算法
@@ -104,11 +89,11 @@ run_in_order(Order.WEAK_FIRST, verbose=True)
 
 程序支持三种对弈模式：
 
-| 模式           | 说明                       | 对局数                              |
-| -------------- | -------------------------- | ----------------------------------- |
-| `WEAK_FIRST`   | 较弱算法先手，较强算法后手 | 100                                 |
-| `STRONG_FIRST` | 较强算法先手，较弱算法后手 | 100                                 |
-| `SAME_LEVEL`   | 同一种算法自对弈           | 随机vs随机: 10000，Minimax/MCTS: 10 |
+| 模式           | 说明             |
+| -------------- | ---------------- |
+| `WEAK_FIRST`   | 较弱算法先手     |
+| `STRONG_FIRST` | 较强算法先手     |
+| `SAME_LEVEL`   | 同一种算法自对弈 |
 
 ## 统计结果
 
@@ -134,9 +119,8 @@ run_in_order(Order.WEAK_FIRST, verbose=True)
 ## 项目结构
 
 ``` text
-hollow-cube-tic-tac-toe/
+max-lines-in-a-row-3d/
 ├── .python-version          # Python 版本配置
-├── main.py                  # 程序入口
 ├── pyproject.toml           # 项目配置
 ├── uv.lock                  # 依赖锁文件
 ├── README.md                # 项目文档
@@ -145,9 +129,10 @@ hollow-cube-tic-tac-toe/
 │   ├── greedy.blend
 │   └── minimax.blend
 └── src/                     # 源代码目录
-    ├── state_and_stat.py    # 游戏状态和统计模块
-    ├── run_in_order.py      # 对弈顺序控制模块
+    ├── state_and_stats.py   # 游戏状态和统计模块
+    ├── run_match.py         # 对弈顺序控制模块
     ├── utils.py             # 工具函数
+    ├── main.py              # 程序入口
     ├── __init__.py
     └── algorithms/          # AI算法模块
         ├── random.py        # 随机策略

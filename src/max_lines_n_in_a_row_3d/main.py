@@ -24,9 +24,9 @@ def main() -> None:
     """
 
     try:
-        run_match(Order.WEAK_FIRST, verbose=True)
-        run_match(Order.STRONG_FIRST, verbose=True)
-        run_match(Order.SAME_LEVEL, verbose=True)
+        run_match(Order.WEAK_FIRST, verbose=False)
+        run_match(Order.STRONG_FIRST, verbose=False)
+        run_match(Order.SAME_LEVEL, verbose=False)
     except KeyboardInterrupt:
         print("程序被用户中断")
 
