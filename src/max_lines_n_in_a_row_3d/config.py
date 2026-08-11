@@ -8,7 +8,7 @@ class Settings(BaseSettings):
 
     greater_matches: int = 10000
     default_matches: int = 100
-    lesser_matches: int = 10
+    less_matches: int = 10
 
     layer_count: int = 3
     row_count: int = 3

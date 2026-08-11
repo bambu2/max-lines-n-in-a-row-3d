@@ -78,7 +78,7 @@ def get_total_games(
             first_player.__name__ == "get_move_mcts"
             and second_player.__name__ == "get_move_mcts"
         ):
-            return settings.lesser_matches
+            return settings.less_matches
         return 0
     else:
         return settings.default_matches
