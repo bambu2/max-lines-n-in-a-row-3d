@@ -372,15 +372,16 @@ class Stats:
         df_scores = pd.DataFrame(
             {
                 "player": ["first"] * self.total_games + ["second"] * self.total_games,
-                "connections": self.scores_first_player + self.scores_second_player,
+                "lines": self.scores_first_player + self.scores_second_player,
             }
         )
         plt.figure(figsize=(10, 6))
-        sns.boxplot(data=df_scores, x="player", y="connections")
-        sns.swarmplot(data=df_scores, x="player", y="connections", color=".25")
+        sns.boxplot(data=df_scores, x="player", y="lines")
+        sns.swarmplot(data=df_scores, x="player", y="lines", color=".25")
+        sns.set_theme()
         plt.xlabel("player")
-        plt.ylabel("connections")
-        plt.title("connections distribution for first and second player")
+        plt.ylabel("lines")
+        plt.title("lines distribution for first and second player")
         plt.show(block=False)
         plt.pause(10)
         plt.close()
@@ -430,7 +431,7 @@ def get_stats(first_player, second_player, total_games: int) -> Stats:
     )
 
     for i in tqdm(range(total_games)):
-        if settings.DEBUG:
+        if settings.debug:
             logger.debug(f"第 {i + 1}/{total_games} 局")
 
         state = GameState()
@@ -450,7 +451,7 @@ def get_stats(first_player, second_player, total_games: int) -> Stats:
             state.make_move(move, current_player)
             current_player = -current_player
 
-            if settings.DEBUG:
+            if settings.debug:
                 print(f"第 {state.move_count} 步: {idx_to_coord(move)}")
 
         end_time = time.time()
@@ -458,7 +459,7 @@ def get_stats(first_player, second_player, total_games: int) -> Stats:
 
         stat.update(state, game_time)
 
-        if settings.DEBUG:
+        if settings.debug:
             state.print_board()
 
     stat.result_update()
