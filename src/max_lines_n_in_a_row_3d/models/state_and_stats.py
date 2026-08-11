@@ -375,10 +375,17 @@ class Stats:
                 "lines": self.scores_first_player + self.scores_second_player,
             }
         )
-        plt.figure(figsize=(10, 6))
-        sns.boxplot(data=df_scores, x="player", y="lines")
-        sns.swarmplot(data=df_scores, x="player", y="lines", color=".25")
+        plt.figure(figsize=(8, 5))
         sns.set_theme()
+        sns.violinplot(
+            data=df_scores,
+            x="player",
+            y="lines",
+            hue="player",
+            palette="Set2",
+            width=0.8,
+            legend=False,
+        )
         plt.xlabel("player")
         plt.ylabel("lines")
         plt.title("lines distribution for first and second player")
@@ -407,9 +414,9 @@ class Stats:
         print(
             f"  平均连线数差: {self.avg_score_first_player - self.avg_score_second_player:.2f}"
         )
-        print()
-        print(f"  平均每局耗时: {self.avg_time:.4f}秒")
-        print(f"  总耗时:   {sum(self.total_time):.2f}秒")
+        if settings.debug:
+            logger.debug(f"平均每局耗时: {self.avg_time:.4f}秒")
+            logger.debug(f"总耗时: {sum(self.total_time):.2f}秒")
 
 
 def get_stats(first_player, second_player, total_games: int) -> Stats:
