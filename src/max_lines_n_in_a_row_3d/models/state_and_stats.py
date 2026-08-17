@@ -369,14 +369,15 @@ class Stats:
 
     def print_stats(self) -> None:
         """打印统计结果到控制台。"""
+        sns.set_theme()
+
         df_scores = pd.DataFrame(
             {
                 "player": ["first"] * self.total_games + ["second"] * self.total_games,
                 "lines": self.scores_first_player + self.scores_second_player,
             }
         )
-        plt.figure(figsize=(8, 5))
-        sns.set_theme()
+        _fig, ax = plt.subplots(figsize=(8, 5))
         sns.violinplot(
             data=df_scores,
             x="player",
@@ -385,10 +386,66 @@ class Stats:
             palette="Set2",
             width=0.8,
             legend=False,
+            ax=ax,
         )
-        plt.xlabel("player")
-        plt.ylabel("lines")
-        plt.title("lines distribution for first and second player")
+        means = [self.avg_score_first_player, self.avg_score_second_player]
+        for i, mean_val in enumerate(means):
+            ax.text(
+                i,
+                mean_val,
+                f"avg: {mean_val:.2f}",
+                ha="center",
+                va="bottom",
+                fontweight="bold",
+                fontsize=10,
+                color="black",
+                bbox={"boxstyle": "round,pad=0.3", "facecolor": "white", "alpha": 0.7},
+            )
+        ax.set_xlabel("player")
+        ax.set_ylabel("lines")
+        ax.set_title("lines distribution for first and second player")
+        plt.show(block=False)
+        plt.pause(10)
+        plt.close()
+
+        df_wins = pd.DataFrame(
+            {
+                "result": [
+                    "First player win",
+                    "Second player win",
+                    "Draw",
+                ],
+                "count": [
+                    self.wins_first_player,
+                    self.wins_second_player,
+                    self.draws,
+                ],
+            }
+        )
+        _fig, ax = plt.subplots(figsize=(8, 5))
+        sns.barplot(
+            data=df_wins,
+            x="result",
+            y="count",
+            hue="result",
+            palette="Set2",
+            legend=False,
+            ax=ax,
+        )
+        for i, (_, row) in enumerate(df_wins.iterrows()):
+            pct = row["count"] / self.total_games * 100
+            ax.text(
+                i,
+                row["count"],
+                f"{row['count']} ({pct:.1f}%)",
+                ha="center",
+                va="bottom",
+                fontweight="bold",
+                fontsize=10,
+            )
+        ax.set_xlabel("result")
+        ax.set_ylabel("count")
+        ax.set_title("win / draw rate")
         plt.show(block=False)
         plt.pause(10)
         plt.close()
