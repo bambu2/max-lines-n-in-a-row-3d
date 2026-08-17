@@ -367,8 +367,8 @@ class Stats:
         self.win_rate_second_player = self.wins_second_player / self.total_games
         self.draw_rate = self.draws / self.total_games
 
-    def print_stats(self) -> None:
-        """打印统计结果到控制台。"""
+    def show_stats(self) -> None:
+        """show stats with matplotlib and seaborn"""
         sns.set_theme()
 
         df_scores = pd.DataFrame(
@@ -450,27 +450,6 @@ class Stats:
         plt.pause(10)
         plt.close()
 
-        print("🏆 胜负统计:")
-        print(
-            f"  先手胜: {self.wins_first_player} ({rate_to_percentage(self.win_rate_first_player)})"
-        )
-        print(
-            f"  后手胜: {self.wins_second_player} ({rate_to_percentage(self.win_rate_second_player)})"
-        )
-        print(f"  平局:    {self.draws} ({rate_to_percentage(self.draw_rate)})")
-        print()
-        print("📈连线数统计:")
-        print("  先手连线数")
-        print(
-            f"    最高: {max(self.scores_first_player)}, 最低: {min(self.scores_first_player)}, 平均: {self.avg_score_first_player:.2f}"
-        )
-        print("  后手连线数")
-        print(
-            f"    最高: {max(self.scores_second_player)}, 最低: {min(self.scores_second_player)}, 平均: {self.avg_score_second_player:.2f}"
-        )
-        print(
-            f"  平均连线数差: {self.avg_score_first_player - self.avg_score_second_player:.2f}"
-        )
         if settings.debug:
             logger.debug(f"平均每局耗时: {self.avg_time:.4f}秒")
             logger.debug(f"总耗时: {sum(self.total_time):.2f}秒")

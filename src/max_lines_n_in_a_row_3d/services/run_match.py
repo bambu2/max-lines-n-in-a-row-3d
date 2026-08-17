@@ -138,4 +138,4 @@ def run_single_match(
     if total_games <= 0:
         raise ValueError(f"Invalid total_games: {total_games}. ")
     stats = get_stats(first_player, second_player, total_games=total_games)
-    stats.print_stats()
+    stats.show_stats()
