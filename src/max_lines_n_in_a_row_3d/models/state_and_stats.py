@@ -17,7 +17,7 @@ from tqdm import tqdm
 
 from max_lines_n_in_a_row_3d.config import settings
 from max_lines_n_in_a_row_3d.logger import get_logger
-from max_lines_n_in_a_row_3d.utils import coord_to_idx, idx_to_coord, rate_to_percentage
+from max_lines_n_in_a_row_3d.utils import coord_to_idx, idx_to_coord
 
 logger = get_logger(__name__)
 
@@ -108,32 +108,32 @@ class GameState:
         lines = []
 
         # 1. X轴方向（每层每行）：9条
-        for layer in range(3):
-            for row in range(3):
+        for layer in range(settings.layers):
+            for row in range(settings.rows):
                 lines.append([(layer, row, 0), (layer, row, 1), (layer, row, 2)])
 
         # 2. Y轴方向（每层每列）：9条
-        for layer in range(3):
-            for column in range(3):
+        for layer in range(settings.layers):
+            for column in range(settings.columns):
                 lines.append(
                     [(layer, 0, column), (layer, 1, column), (layer, 2, column)]
                 )
 
         # 3. Z轴方向（跨层同一位置）：9条
-        for row in range(3):
-            for column in range(3):
+        for row in range(settings.rows):
+            for column in range(settings.columns):
                 lines.append([(0, row, column), (1, row, column), (2, row, column)])
 
         # 4. 平面对角线：18条
-        for layer in range(3):
+        for layer in range(settings.layers):
             lines.append([(layer, 0, 0), (layer, 1, 1), (layer, 2, 2)])
             lines.append([(layer, 0, 2), (layer, 1, 1), (layer, 2, 0)])
 
-        for row in range(3):
+        for row in range(settings.rows):
             lines.append([(0, row, 0), (1, row, 1), (2, row, 2)])
             lines.append([(0, row, 2), (1, row, 1), (2, row, 0)])
 
-        for column in range(3):
+        for column in range(settings.columns):
             lines.append([(0, 0, column), (1, 1, column), (2, 2, column)])
             lines.append([(0, 2, column), (1, 1, column), (2, 0, column)])
 

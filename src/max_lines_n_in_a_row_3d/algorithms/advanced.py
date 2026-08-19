@@ -81,26 +81,26 @@ def get_move_advanced(state: GameState, player: int) -> int | None:
         position_bonus = 0
         layer, row, column = idx_to_coord(idx)
         if (
-            layer in (0, settings.layer_count - 1)
-            and row in (0, settings.row_count - 1)
-            and column in (0, settings.column_count - 1)
+            layer in (0, settings.layers - 1)
+            and row in (0, settings.rows - 1)
+            and column in (0, settings.columns - 1)
         ):
             position_bonus = 3
         elif (
             (
-                layer not in (0, settings.layer_count - 1)
-                and row in (0, settings.row_count - 1)
-                and column in (0, settings.column_count - 1)
+                layer not in (0, settings.layers - 1)
+                and row in (0, settings.rows - 1)
+                and column in (0, settings.columns - 1)
             )
             or (
-                row not in (0, settings.row_count - 1)
-                and layer in (0, settings.layer_count - 1)
-                and column in (0, settings.column_count - 1)
+                row not in (0, settings.rows - 1)
+                and layer in (0, settings.layers - 1)
+                and column in (0, settings.columns - 1)
             )
             or (
-                column not in (0, settings.column_count - 1)
-                and layer in (0, settings.layer_count - 1)
-                and row in (0, settings.row_count - 1)
+                column not in (0, settings.columns - 1)
+                and layer in (0, settings.layers - 1)
+                and row in (0, settings.rows - 1)
             )
         ):
             position_bonus = 2

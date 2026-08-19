@@ -1,7 +1,5 @@
 from pydantic_settings import BaseSettings
 
-# from max_lines_n_in_a_row_3d.utils import coord_to_idx
-
 
 class Settings(BaseSettings):
     debug: bool = False
@@ -10,15 +8,12 @@ class Settings(BaseSettings):
     default_matches: int = 100
     less_matches: int = 10
 
-    layer_count: int = 3
-    row_count: int = 3
-    column_count: int = 3
-    total_cells: int = layer_count * row_count * column_count
+    layers: int = 3
+    rows: int = 3
+    columns: int = 3
+    total_cells: int = layers * rows * columns
     forbidden_coords: list[tuple[int, int, int]] = [(1, 1, 1)]
-    forbidden_indexes: list[int] = [
-        13
-        # coord_to_idx(x, y, z) for x, y, z in forbidden_coords
-    ]
+    forbidden_indexes: list[int] = [13]
     move_limit: int = total_cells - len(forbidden_indexes)
 
     class Config:

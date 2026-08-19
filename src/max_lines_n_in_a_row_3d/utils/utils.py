@@ -1,11 +1,14 @@
+from max_lines_n_in_a_row_3d.config import settings
+
+
 def coord_to_idx(layer: int, row: int, col: int) -> int:
-    return layer * 9 + row * 3 + col
+    return layer * (settings.columns * settings.rows) + row * settings.columns + col
 
 
 def idx_to_coord(idx: int) -> tuple[int, int, int]:
-    layer = idx // 9
-    row = (idx % 9) // 3
-    col = idx % 3
+    layer = idx // (settings.columns * settings.rows)
+    row = (idx % (settings.columns * settings.rows)) // settings.columns
+    col = idx % settings.columns
     return layer, row, col
 
 
