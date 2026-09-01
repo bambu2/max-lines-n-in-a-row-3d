@@ -386,7 +386,7 @@ class MCTS:
         return 0
 
 
-def get_move_mcts(state: GameState, player: int, iterations: int = 500) -> int | None:
+def mcts_move(state: GameState, player: int, iterations: int = 500) -> int | None:
     """
     MCTS AI 主函数：使用蒙特卡洛树搜索获取最优走法。
 

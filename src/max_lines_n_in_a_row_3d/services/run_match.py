@@ -18,11 +18,11 @@ from collections.abc import Callable
 from enum import Enum
 
 from max_lines_n_in_a_row_3d.algorithms import (
-    get_move_advanced,
-    get_move_greedy,
-    get_move_mcts,
-    get_move_minimax,
-    get_move_random,
+    advanced_move,
+    greedy_move,
+    mcts_move,
+    minimax_move,
+    random_move,
 )
 from max_lines_n_in_a_row_3d.config import settings
 from max_lines_n_in_a_row_3d.models import GameState, get_stats
@@ -93,11 +93,11 @@ def run_match(order: Order) -> None:
         verbose: 是否打印每局详细信息（默认 False）
     """
     algorithms = [
-        get_move_random,
-        get_move_greedy,
-        get_move_advanced,
-        get_move_minimax,
-        get_move_mcts,
+        random_move,
+        greedy_move,
+        advanced_move,
+        minimax_move,
+        mcts_move,
     ]
     try:
         if order == Order.WEAK_FIRST:
@@ -122,9 +122,7 @@ def run_match(order: Order) -> None:
 
 
 def run_single_match(
-    first_player: Callable[[GameState, int], int | None],
-    second_player: Callable[[GameState, int], int | None],
-    order: Order,
+    first_player: Callable, second_player: Callable, order: Order
 ) -> None:
     """
     执行一组对弈并打印统计结果。

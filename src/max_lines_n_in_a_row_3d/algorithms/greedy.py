@@ -7,7 +7,7 @@
 from max_lines_n_in_a_row_3d.models import GameState
 
 
-def get_move_greedy(state: GameState, player: int) -> int | None:
+def greedy_move(state: GameState, player: int) -> int | None:
     """
     贪心策略：选择能立即形成最多线的位置。
 

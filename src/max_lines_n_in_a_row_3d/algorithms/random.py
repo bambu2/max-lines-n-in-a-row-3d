@@ -9,7 +9,7 @@ import random
 from max_lines_n_in_a_row_3d.models import GameState
 
 
-def get_move_random(state: GameState, player: int) -> int | None:
+def random_move(state: GameState, player: int) -> int | None:
     """
     随机选择一个合法落子位置。
 

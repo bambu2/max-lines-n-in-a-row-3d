@@ -8,7 +8,9 @@
 """
 
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -317,6 +319,8 @@ class Stats:
         total_time: 每局耗时列表（秒）
     """
 
+    first_player: Callable
+    second_player: Callable
     total_games: int
     wins_first_player: int = 0
     wins_second_player: int = 0
@@ -404,8 +408,12 @@ class Stats:
         ax.set_xlabel("player")
         ax.set_ylabel("lines")
         ax.set_title("lines distribution for first and second player")
-        plt.show(block=False)
-        plt.pause(10)
+        plt.savefig(
+            settings.save_dir
+            / f"lines_distribution_{self.first_player.__name__}_vs_{self.second_player.__name__}.png",
+            dpi=300,
+            bbox_inches="tight",
+        )
         plt.close()
 
         df_wins = pd.DataFrame(
@@ -446,8 +454,12 @@ class Stats:
         ax.set_xlabel("result")
         ax.set_ylabel("count")
         ax.set_title("win / draw rate")
-        plt.show(block=False)
-        plt.pause(10)
+        plt.savefig(
+            settings.save_dir
+            / f"win_draw_rate_{self.first_player.__name__}_vs_{self.second_player.__name__}.png",
+            dpi=300,
+            bbox_inches="tight",
+        )
         plt.close()
 
         if settings.debug:
@@ -465,9 +477,9 @@ def get_stats(first_player, second_player, total_games: int) -> Stats:
         total_games: 总对局数
 
     Returns:
-        Stat: 统计结果对象
+        Stats: 统计结果对象
     """
-    stat = Stats(total_games)
+    stats = Stats(first_player, second_player, total_games)
 
     logger.info(
         f"先手: {first_player.__name__} vs 后手: {second_player.__name__}, 对局数: {total_games}"
@@ -500,11 +512,11 @@ def get_stats(first_player, second_player, total_games: int) -> Stats:
         end_time = time.time()
         game_time = end_time - start_time
 
-        stat.update(state, game_time)
+        stats.update(state, game_time)
 
         if settings.debug:
             state.print_board()
 
-    stat.result_update()
+    stats.result_update()
 
-    return stat
+    return stats

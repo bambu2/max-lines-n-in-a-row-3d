@@ -10,3 +10,5 @@ wheels/
 .venv
 
 *.log
+
+src/max_lines_n_in_a_row_3d/figures

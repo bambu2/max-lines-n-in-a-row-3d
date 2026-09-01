@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from pydantic_settings import BaseSettings
 
 
@@ -15,6 +17,9 @@ class Settings(BaseSettings):
     forbidden_coords: list[tuple[int, int, int]] = [(1, 1, 1)]
     forbidden_indexes: list[int] = [13]
     move_limit: int = total_cells - len(forbidden_indexes)
+
+    root_dir: Path = Path(__file__).parent
+    save_dir: Path = root_dir / "figures"
 
     class Config:
         env_file = ".env"

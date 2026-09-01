@@ -5,6 +5,7 @@
 - SAME_LEVEL: 同一种算法自对弈
 """
 
+from max_lines_n_in_a_row_3d.config import settings
 from max_lines_n_in_a_row_3d.logger import get_logger
 from max_lines_n_in_a_row_3d.services import Order, run_match
 
@@ -22,6 +23,8 @@ def main():
     """
 
     try:
+        settings.save_dir.mkdir(parents=True, exist_ok=True)
+
         run_match(Order.WEAK_FIRST)
         run_match(Order.STRONG_FIRST)
         run_match(Order.SAME_LEVEL)

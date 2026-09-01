@@ -9,7 +9,7 @@ from max_lines_n_in_a_row_3d.models import GameState
 from max_lines_n_in_a_row_3d.utils import idx_to_coord
 
 
-def get_move_advanced(state: GameState, player: int) -> int | None:
+def advanced_move(state: GameState, player: int) -> int | None:
     """
     高级启发式策略：使用评估函数选择潜力最高的位置。
 

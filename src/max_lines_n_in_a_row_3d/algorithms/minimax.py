@@ -7,7 +7,7 @@
 from max_lines_n_in_a_row_3d.models import GameState
 
 
-def get_move_minimax(state: GameState, player: int, depth: int = 4) -> int | None:
+def minimax_move(state: GameState, player: int, depth: int = 4) -> int | None:
     """
     使用minimax算法（带alpha-beta剪枝）获取最优走法。
 

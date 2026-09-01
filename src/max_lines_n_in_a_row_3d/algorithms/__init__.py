@@ -29,16 +29,16 @@ AI算法模块。
 所有策略函数签名：(state: GameState, player: int) -> int | None
 """
 
-from max_lines_n_in_a_row_3d.algorithms.advanced import get_move_advanced
-from max_lines_n_in_a_row_3d.algorithms.greedy import get_move_greedy
-from max_lines_n_in_a_row_3d.algorithms.mcts import get_move_mcts
-from max_lines_n_in_a_row_3d.algorithms.minimax import get_move_minimax
-from max_lines_n_in_a_row_3d.algorithms.random import get_move_random
+from max_lines_n_in_a_row_3d.algorithms.advanced import advanced_move
+from max_lines_n_in_a_row_3d.algorithms.greedy import greedy_move
+from max_lines_n_in_a_row_3d.algorithms.mcts import mcts_move
+from max_lines_n_in_a_row_3d.algorithms.minimax import minimax_move
+from max_lines_n_in_a_row_3d.algorithms.random import random_move
 
 __all__ = [
-    "get_move_advanced",
-    "get_move_greedy",
-    "get_move_mcts",
-    "get_move_minimax",
-    "get_move_random",
+    "advanced_move",
+    "greedy_move",
+    "mcts_move",
+    "minimax_move",
+    "random_move",
 ]
