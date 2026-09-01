@@ -3,9 +3,6 @@
 - WEAK_FIRST: 较弱算法先手，较强算法后手
 - STRONG_FIRST: 较强算法先手，较弱算法后手
 - SAME_LEVEL: 同一种算法自对弈
-
-运行方式：
-    python main.py
 """
 
 from max_lines_n_in_a_row_3d.logger import get_logger
